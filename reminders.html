@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>提醒中心</title><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head>
+<body>
+<header class="topbar compact"><div class="container topbar-inner"><div><p class="eyebrow">SMART REMINDERS</p><h1>提醒中心</h1><p class="subtitle">集中查看临期、过期和低库存物品</p></div><a class="button secondary" href="{{ url_for('index') }}">返回首页</a></div></header>
+<main class="container narrow">
+    <section class="panel"><div class="panel-heading"><div><h2>库存不足</h2><p>{{ low_stock|length }} 项</p></div></div>
+        {% for item in low_stock %}<div class="reminder-row"><div><strong>{{ item.name }}</strong><small>{{ item.room }} · {{ item.location }}</small></div><span>现有 {{ item.quantity }} / 最低 {{ item.min_quantity }}</span></div>{% else %}<p class="muted">暂无低库存物品。</p>{% endfor %}
+        {% if low_stock %}<form method="post" action="{{ url_for('shopping_sync') }}"><button class="button primary" type="submit">加入购物清单</button></form>{% endif %}
+    </section>
+    <section class="panel"><div class="panel-heading"><div><h2>30天内到期</h2><p>{{ expiring|length }} 项</p></div></div>
+        {% for item in expiring %}<div class="reminder-row"><div><strong>{{ item.name }}</strong><small>{{ item.item_code }}</small></div><span>{{ item.expiry_date }}</span></div>{% else %}<p class="muted">暂无即将到期物品。</p>{% endfor %}
+    </section>
+    <section class="panel"><div class="panel-heading"><div><h2>已经过期</h2><p>{{ expired|length }} 项</p></div></div>
+        {% for item in expired %}<div class="reminder-row danger-row"><div><strong>{{ item.name }}</strong><small>{{ item.item_code }}</small></div><span>{{ item.expiry_date }}</span></div>{% else %}<p class="muted">暂无过期物品。</p>{% endfor %}
+    </section>
+</main>
+</body>
+</html>

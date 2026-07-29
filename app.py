@@ -10,7 +10,6 @@ from functools import wraps
 from pathlib import Path
 
 import qrcode
-from jinja2 import TemplateNotFound
 from flask import (
     Flask,
     flash,
@@ -128,7 +127,6 @@ def init_database() -> None:
                 expiry_date TEXT,
                 status TEXT NOT NULL DEFAULT '正常使用',
                 notes TEXT,
-                child_name TEXT,
                 created_at TEXT NOT NULL,
                 UNIQUE(user_id, item_code),
                 FOREIGN KEY(user_id) REFERENCES users(id)
@@ -141,8 +139,6 @@ def init_database() -> None:
             conn.execute("ALTER TABLE items ADD COLUMN user_id INTEGER")
         if "min_quantity" not in columns:
             conn.execute("ALTER TABLE items ADD COLUMN min_quantity INTEGER NOT NULL DEFAULT 0")
-        if "child_name" not in columns:
-            conn.execute("ALTER TABLE items ADD COLUMN child_name TEXT")
 
         conn.execute(
             """
@@ -173,48 +169,6 @@ def init_database() -> None:
             conn.execute(
                 "ALTER TABLE users ADD COLUMN children_count INTEGER NOT NULL DEFAULT 0"
             )
-
-
-
-def ensure_latest_schema() -> None:
-    """Repair columns required by newer versions without deleting existing data."""
-    with get_connection() as conn:
-        item_columns = {
-            row["name"] for row in conn.execute("PRAGMA table_info(items)").fetchall()
-        }
-        if "user_id" not in item_columns:
-            conn.execute("ALTER TABLE items ADD COLUMN user_id INTEGER")
-        if "min_quantity" not in item_columns:
-            conn.execute(
-                "ALTER TABLE items ADD COLUMN min_quantity INTEGER NOT NULL DEFAULT 0"
-            )
-        if "child_name" not in item_columns:
-            conn.execute("ALTER TABLE items ADD COLUMN child_name TEXT")
-
-        user_columns = {
-            row["name"] for row in conn.execute("PRAGMA table_info(users)").fetchall()
-        }
-        if "household_type" not in user_columns:
-            conn.execute(
-                "ALTER TABLE users ADD COLUMN household_type TEXT NOT NULL DEFAULT '独居'"
-            )
-        if "children_count" not in user_columns:
-            conn.execute(
-                "ALTER TABLE users ADD COLUMN children_count INTEGER NOT NULL DEFAULT 0"
-            )
-
-        shopping_columns = {
-            row["name"] for row in conn.execute(
-                "PRAGMA table_info(shopping_items)"
-            ).fetchall()
-        }
-        if "user_id" not in shopping_columns:
-            conn.execute("ALTER TABLE shopping_items ADD COLUMN user_id INTEGER")
-
-
-@app.before_request
-def repair_schema_before_request():
-    ensure_latest_schema()
 
 
 def login_required(view):
@@ -277,7 +231,6 @@ def validate_form(form) -> tuple[dict, str | None]:
         "expiry_date": form.get("expiry_date", "").strip(),
         "status": form.get("status", "").strip(),
         "notes": form.get("notes", "").strip(),
-        "child_name": form.get("child_name", "").strip(),
     }
 
     if not data["item_code"] and data["category"]:
@@ -373,19 +326,6 @@ def query_items(keyword: str = "", category: str = "全部", status: str = "全�
     sql += " ORDER BY id DESC"
     with get_connection() as conn:
         return conn.execute(sql, params).fetchall()
-
-
-def child_labels() -> list[str]:
-    count = int(session.get("children_count", 0))
-    return [f"儿童{i}" for i in range(1, count + 1)]
-
-
-def family_context() -> dict:
-    return {
-        "household_type": session.get("household_type", "独居"),
-        "children_count": int(session.get("children_count", 0)),
-        "child_labels": child_labels(),
-    }
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -582,7 +522,7 @@ def add_item():
         data, error = validate_form(request.form)
         if error:
             flash(error, "error")
-            return render_template("form.html", title="新增物品", item=data, categories=CATEGORIES, statuses=STATUSES, **family_context())
+            return render_template("form.html", title="新增物品", item=data, categories=CATEGORIES, statuses=STATUSES)
         try:
             with get_connection() as conn:
                 conn.execute(
@@ -590,15 +530,14 @@ def add_item():
                     INSERT INTO items (
                         user_id, item_code, name, category, room, location,
                         quantity, min_quantity, purchase_date, expiry_date,
-                        status, notes, child_name, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        status, notes, created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         current_user_id(), data["item_code"], data["name"],
                         data["category"], data["room"], data["location"],
                         data["quantity"], data["min_quantity"], data["purchase_date"],
                         data["expiry_date"], data["status"], data["notes"],
-                        data["child_name"] or None,
                         datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     ),
                 )
@@ -612,9 +551,8 @@ def add_item():
         "item_code": next_item_code("其他"),
         "quantity": 1,
         "min_quantity": 0,
-        "child_name": request.args.get("child", "").strip(),
     }
-    return render_template("form.html", title="新增物品", item=default_item, categories=CATEGORIES, statuses=STATUSES, **family_context())
+    return render_template("form.html", title="新增物品", item=default_item, categories=CATEGORIES, statuses=STATUSES)
 
 
 @app.route("/edit/<int:item_id>", methods=["GET", "POST"])
@@ -634,14 +572,14 @@ def edit_item(item_id: int):
         data, error = validate_form(request.form)
         if error:
             flash(error, "error")
-            return render_template("form.html", title="修改物品", item=data, categories=CATEGORIES, statuses=STATUSES, **family_context())
+            return render_template("form.html", title="修改物品", item=data, categories=CATEGORIES, statuses=STATUSES)
         try:
             with get_connection() as conn:
                 conn.execute(
                     """
                     UPDATE items SET item_code=?, name=?, category=?, room=?,
                         location=?, quantity=?, min_quantity=?, purchase_date=?,
-                        expiry_date=?, status=?, notes=?, child_name=?
+                        expiry_date=?, status=?, notes=?
                     WHERE id=? AND user_id=?
                     """,
                     (
@@ -649,7 +587,6 @@ def edit_item(item_id: int):
                         data["room"], data["location"], data["quantity"],
                         data["min_quantity"], data["purchase_date"],
                         data["expiry_date"], data["status"], data["notes"],
-                        data["child_name"] or None,
                         item_id, uid,
                     ),
                 )
@@ -658,7 +595,7 @@ def edit_item(item_id: int):
         except sqlite3.IntegrityError:
             flash("物品编号已存在，请更换编号。", "error")
 
-    return render_template("form.html", title="修改物品", item=dict(item), categories=CATEGORIES, statuses=STATUSES, **family_context())
+    return render_template("form.html", title="修改物品", item=dict(item), categories=CATEGORIES, statuses=STATUSES)
 
 
 @app.post("/delete/<int:item_id>")
@@ -790,104 +727,6 @@ def shopping_delete(shopping_id: int):
     return redirect(url_for("shopping_list"))
 
 
-@app.route("/children")
-@login_required
-def children_storage():
-    if session.get("household_type") != "已婚有子（三人及以上）":
-        flash("儿童收纳页面仅对已婚有子家庭开放。", "error")
-        return redirect(url_for("index"))
-
-    try:
-        ensure_latest_schema()
-
-        raw_count = session.get("children_count", 0)
-        try:
-            count = max(int(raw_count or 0), 0)
-        except (TypeError, ValueError):
-            count = 0
-
-        if count < 1:
-            with get_connection() as conn:
-                user = conn.execute(
-                    "SELECT children_count FROM users WHERE id = ?",
-                    (current_user_id(),),
-                ).fetchone()
-            if user:
-                try:
-                    count = max(int(user["children_count"] or 0), 0)
-                except (TypeError, ValueError):
-                    count = 0
-
-        # Older accounts may have selected the family type before child count existed.
-        if count < 1:
-            count = 1
-            with get_connection() as conn:
-                conn.execute(
-                    "UPDATE users SET children_count = 1 WHERE id = ?",
-                    (current_user_id(),),
-                )
-            session["children_count"] = 1
-
-        labels = [f"儿童{i}" for i in range(1, count + 1)]
-        uid = current_user_id()
-        child_groups = []
-
-        with get_connection() as conn:
-            for label in labels:
-                rows = conn.execute(
-                    """
-                    SELECT * FROM items
-                    WHERE user_id = ? AND COALESCE(child_name, '') = ?
-                    ORDER BY category, name
-                    """,
-                    (uid, label),
-                ).fetchall()
-
-                quantity_total = 0
-                for row in rows:
-                    try:
-                        quantity_total += int(row["quantity"] or 0)
-                    except (TypeError, ValueError):
-                        pass
-
-                child_groups.append(
-                    {
-                        "name": label,
-                        "items": rows,
-                        "count": len(rows),
-                        "quantity": quantity_total,
-                    }
-                )
-
-            unassigned = conn.execute(
-                """
-                SELECT * FROM items
-                WHERE user_id = ? AND COALESCE(child_name, '') = ''
-                ORDER BY category, name
-                """,
-                (uid,),
-            ).fetchall()
-
-        return render_template(
-            "children.html",
-            child_groups=child_groups,
-            unassigned=unassigned,
-            children_count=count,
-        )
-
-    except TemplateNotFound:
-        flash("缺少 templates/children.html，请把该文件上传到 templates 文件夹。", "error")
-        return redirect(url_for("index"))
-    except sqlite3.Error as exc:
-        app.logger.exception("儿童收纳数据库错误: %s", exc)
-        flash("儿童收纳数据正在初始化，请刷新后重试。", "error")
-        return redirect(url_for("index"))
-    except Exception as exc:
-        app.logger.exception("儿童收纳页面错误: %s", exc)
-        flash("儿童收纳页面发生错误，请稍后重试。", "error")
-        return redirect(url_for("index"))
-
-
 @app.route("/locations")
 @login_required
 def locations():
@@ -963,33 +802,6 @@ def export_csv():
         as_attachment=True,
         download_name="家庭物品清单.csv",
     )
-
-
-@app.errorhandler(500)
-def internal_error(error):
-    app.logger.exception("Internal server error: %s", error)
-    return render_template("500.html"), 500
-
-
-@app.route("/diagnostic")
-@login_required
-def diagnostic():
-    ensure_latest_schema()
-    with get_connection() as conn:
-        item_columns = [
-            row["name"] for row in conn.execute("PRAGMA table_info(items)").fetchall()
-        ]
-        user_columns = [
-            row["name"] for row in conn.execute("PRAGMA table_info(users)").fetchall()
-        ]
-    return {
-        "status": "ok",
-        "user_id": current_user_id(),
-        "household_type": session.get("household_type"),
-        "children_count": session.get("children_count"),
-        "items_columns": item_columns,
-        "users_columns": user_columns,
-    }
 
 
 @app.route("/health")
