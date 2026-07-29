@@ -28,6 +28,9 @@
         <a href="{{ url_for('reminders') }}">提醒中心</a>
         <a href="{{ url_for('shopping_list') }}">购物清单</a>
         <a href="{{ url_for('locations') }}">收纳二维码</a>
+        {% if household_type == "已婚有子（三人及以上）" %}
+        <a href="{{ url_for('children_storage') }}">儿童收纳</a>
+        {% endif %}
     </div>
 </nav>
 

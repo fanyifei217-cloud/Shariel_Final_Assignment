@@ -49,6 +49,20 @@
                 <label><span>最低库存</span><input type="number" name="min_quantity" min="0" value="{{ item.get('min_quantity', 0) }}"><small>数量达到或低于此值时提醒</small></label>
                 <label><span>购入日期</span><input type="date" name="purchase_date" value="{{ item.get('purchase_date', '') or '' }}"></label>
                 <label><span>有效期</span><input type="date" name="expiry_date" value="{{ item.get('expiry_date', '') or '' }}"></label>
+
+                {% if household_type == "已婚有子（三人及以上）" %}
+                <label>
+                    <span>所属儿童</span>
+                    <select name="child_name">
+                        <option value="">家庭共用或未指定</option>
+                        {% for child in child_labels %}
+                        <option value="{{ child }}" {% if item.get('child_name', '') == child %}selected{% endif %}>{{ child }}</option>
+                        {% endfor %}
+                    </select>
+                    <small>选择后，物品会显示在对应儿童收纳页面。</small>
+                </label>
+                {% endif %}
+
                 <label class="full-width"><span>备注</span><textarea name="notes" rows="4">{{ item.get('notes', '') or '' }}</textarea></label>
             </div>
             <div class="form-actions"><button class="button primary" type="submit">保存</button><a class="button secondary" href="{{ url_for('index') }}">取消</a></div>

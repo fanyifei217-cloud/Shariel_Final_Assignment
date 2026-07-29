@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>儿童收纳｜家庭物品收纳管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="topbar compact">
+    <div class="container topbar-inner">
+        <div>
+            <p class="eyebrow">CHILDREN STORAGE</p>
+            <h1>儿童收纳空间</h1>
+            <p class="subtitle">为每名儿童建立独立的物品收纳清单</p>
+        </div>
+        <a class="button secondary" href="{{ url_for('index') }}">返回首页</a>
+    </div>
+</header>
+
+<main class="container">
+    <section class="children-overview panel">
+        <div>
+            <span class="household-badge">儿童专属页面</span>
+            <h2>当前共有 {{ children_count }} 名儿童</h2>
+            <p>可以分别登记衣物、书籍、药品、玩具和学习用品，避免物品混放。</p>
+        </div>
+    </section>
+
+    <section class="children-grid">
+        {% for group in child_groups %}
+        <article class="panel child-card">
+            <div class="child-card-header">
+                <div>
+                    <p class="eyebrow brown">CHILD {{ loop.index }}</p>
+                    <h2>{{ group.name }}</h2>
+                    <p>{{ group.count }} 种物品，共 {{ group.quantity }} 件</p>
+                </div>
+                <a class="button primary" href="{{ url_for('add_item', child=group.name) }}">＋ 添加物品</a>
+            </div>
+
+            {% if group.items %}
+            <div class="child-item-list">
+                {% for item in group.items %}
+                <div class="child-item-row">
+                    <div>
+                        <strong>{{ item.name }}</strong>
+                        <small>{{ item.category }} · {{ item.room }} · {{ item.location }}</small>
+                    </div>
+                    <div class="child-item-meta">
+                        <span>数量 {{ item.quantity }}</span>
+                        <a href="{{ url_for('edit_item', item_id=item.id) }}">修改</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="child-empty">
+                <span>🧸</span>
+                <p>还没有登记物品</p>
+            </div>
+            {% endif %}
+        </article>
+        {% endfor %}
+    </section>
+
+    {% if unassigned %}
+    <section class="panel unassigned-panel">
+        <div class="panel-heading">
+            <div>
+                <h2>尚未分配儿童的物品</h2>
+                <p>可点击修改，将这些物品分配给对应儿童。</p>
+            </div>
+        </div>
+        <div class="child-item-list">
+            {% for item in unassigned %}
+            <div class="child-item-row">
+                <div>
+                    <strong>{{ item.name }}</strong>
+                    <small>{{ item.category }} · {{ item.room }} · {{ item.location }}</small>
+                </div>
+                <div class="child-item-meta">
+                    <span>数量 {{ item.quantity }}</span>
+                    <a href="{{ url_for('edit_item', item_id=item.id) }}">分配</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</main>
+</body>
+</html>
