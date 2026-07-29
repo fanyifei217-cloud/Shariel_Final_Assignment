@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import io
+import json
 import os
 import re
 import sqlite3
@@ -105,6 +106,7 @@ def init_database() -> None:
                 email TEXT UNIQUE,
                 household_type TEXT NOT NULL DEFAULT '独居',
                 children_count INTEGER NOT NULL DEFAULT 0,
+                child_names TEXT NOT NULL DEFAULT '[]',
                 password_hash TEXT NOT NULL,
                 created_at TEXT NOT NULL,
                 CHECK (phone IS NOT NULL OR email IS NOT NULL)
@@ -173,6 +175,10 @@ def init_database() -> None:
             conn.execute(
                 "ALTER TABLE users ADD COLUMN children_count INTEGER NOT NULL DEFAULT 0"
             )
+        if "child_names" not in user_columns:
+            conn.execute(
+                "ALTER TABLE users ADD COLUMN child_names TEXT NOT NULL DEFAULT '[]'"
+            )
 
 
 
@@ -201,6 +207,10 @@ def ensure_latest_schema() -> None:
         if "children_count" not in user_columns:
             conn.execute(
                 "ALTER TABLE users ADD COLUMN children_count INTEGER NOT NULL DEFAULT 0"
+            )
+        if "child_names" not in user_columns:
+            conn.execute(
+                "ALTER TABLE users ADD COLUMN child_names TEXT NOT NULL DEFAULT '[]'"
             )
 
         shopping_columns = {
@@ -376,8 +386,18 @@ def query_items(keyword: str = "", category: str = "全部", status: str = "全�
 
 
 def child_labels() -> list[str]:
-    count = int(session.get("children_count", 0))
-    return [f"儿童{i}" for i in range(1, count + 1)]
+    count = max(int(session.get("children_count", 0) or 0), 0)
+    raw_names = session.get("child_names", [])
+    if isinstance(raw_names, str):
+        try:
+            raw_names = json.loads(raw_names)
+        except (TypeError, ValueError, json.JSONDecodeError):
+            raw_names = []
+    names = [str(name).strip() for name in raw_names if str(name).strip()]
+    names = names[:count]
+    while len(names) < count:
+        names.append(f"儿童{len(names) + 1}")
+    return names
 
 
 def family_context() -> dict:
@@ -447,8 +467,8 @@ def register():
                     cursor = conn.execute(
                         """
                         INSERT INTO users
-                        (display_name, phone, email, household_type, children_count, password_hash, created_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        (display_name, phone, email, household_type, children_count, child_names, password_hash, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                         (
                             display_name,
@@ -456,6 +476,7 @@ def register():
                             email,
                             household_type,
                             children_count,
+                            json.dumps([f"儿童{i}" for i in range(1, children_count + 1)], ensure_ascii=False),
                             generate_password_hash(password),
                             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         ),
@@ -465,6 +486,7 @@ def register():
                 session["display_name"] = display_name
                 session["household_type"] = household_type
                 session["children_count"] = children_count
+                session["child_names"] = [f"儿童{i}" for i in range(1, children_count + 1)]
                 flash("注册成功，欢迎使用家庭物品收纳管理系统。", "success")
                 return redirect(url_for("index"))
             except sqlite3.IntegrityError:
@@ -496,6 +518,10 @@ def login():
             session["display_name"] = user["display_name"]
             session["household_type"] = user["household_type"]
             session["children_count"] = user["children_count"]
+            try:
+                session["child_names"] = json.loads(user["child_names"] or "[]")
+            except (TypeError, ValueError, json.JSONDecodeError, IndexError):
+                session["child_names"] = []
             flash("登录成功。", "success")
             return redirect(url_for("index"))
 
@@ -790,102 +816,106 @@ def shopping_delete(shopping_id: int):
     return redirect(url_for("shopping_list"))
 
 
-@app.route("/children")
+@app.route("/children", methods=["GET", "POST"])
 @login_required
 def children_storage():
     if session.get("household_type") != "已婚有子（三人及以上）":
         flash("儿童收纳页面仅对已婚有子家庭开放。", "error")
         return redirect(url_for("index"))
 
-    try:
-        ensure_latest_schema()
+    uid = current_user_id()
+    with get_connection() as conn:
+        user = conn.execute(
+            "SELECT children_count, child_names FROM users WHERE id = ?", (uid,)
+        ).fetchone()
 
-        raw_count = session.get("children_count", 0)
+        count = max(int((user["children_count"] if user else 0) or 0), 1)
         try:
-            count = max(int(raw_count or 0), 0)
-        except (TypeError, ValueError):
-            count = 0
+            saved_names = json.loads((user["child_names"] if user else "[]") or "[]")
+        except (TypeError, ValueError, json.JSONDecodeError):
+            saved_names = []
 
-        if count < 1:
-            with get_connection() as conn:
-                user = conn.execute(
-                    "SELECT children_count FROM users WHERE id = ?",
-                    (current_user_id(),),
-                ).fetchone()
-            if user:
-                try:
-                    count = max(int(user["children_count"] or 0), 0)
-                except (TypeError, ValueError):
-                    count = 0
+        names = [str(name).strip() for name in saved_names if str(name).strip()][:count]
+        while len(names) < count:
+            names.append(f"儿童{len(names) + 1}")
 
-        # Older accounts may have selected the family type before child count existed.
-        if count < 1:
-            count = 1
-            with get_connection() as conn:
-                conn.execute(
-                    "UPDATE users SET children_count = 1 WHERE id = ?",
-                    (current_user_id(),),
-                )
-            session["children_count"] = 1
+        if request.method == "POST":
+            action = request.form.get("action", "save_names")
+            if action == "add_child":
+                count += 1
+                names.append(f"儿童{count}")
+            elif action == "remove_child" and count > 1:
+                removed_name = names[-1]
+                assigned = conn.execute(
+                    "SELECT COUNT(*) FROM items WHERE user_id = ? AND child_name = ?",
+                    (uid, removed_name),
+                ).fetchone()[0]
+                if assigned:
+                    flash(f"{removed_name} 仍有物品，请先将物品重新分配后再删除。", "error")
+                    return redirect(url_for("children_storage"))
+                count -= 1
+                names = names[:count]
+            else:
+                submitted = request.form.getlist("child_name")
+                cleaned = []
+                for index in range(count):
+                    value = submitted[index].strip() if index < len(submitted) else ""
+                    cleaned.append(value or f"儿童{index + 1}")
+                if len(set(cleaned)) != len(cleaned):
+                    flash("儿童昵称不能重复。", "error")
+                    return redirect(url_for("children_storage"))
+                # Update item assignments when a child is renamed.
+                for old_name, new_name in zip(names, cleaned):
+                    if old_name != new_name:
+                        conn.execute(
+                            "UPDATE items SET child_name = ? WHERE user_id = ? AND child_name = ?",
+                            (new_name, uid, old_name),
+                        )
+                names = cleaned
 
-        labels = [f"儿童{i}" for i in range(1, count + 1)]
-        uid = current_user_id()
+            conn.execute(
+                "UPDATE users SET children_count = ?, child_names = ? WHERE id = ?",
+                (count, json.dumps(names, ensure_ascii=False), uid),
+            )
+            session["children_count"] = count
+            session["child_names"] = names
+            flash("儿童收纳设置已保存。", "success")
+            return redirect(url_for("children_storage"))
+
         child_groups = []
-
-        with get_connection() as conn:
-            for label in labels:
-                rows = conn.execute(
-                    """
-                    SELECT * FROM items
-                    WHERE user_id = ? AND COALESCE(child_name, '') = ?
-                    ORDER BY category, name
-                    """,
-                    (uid, label),
-                ).fetchall()
-
-                quantity_total = 0
-                for row in rows:
-                    try:
-                        quantity_total += int(row["quantity"] or 0)
-                    except (TypeError, ValueError):
-                        pass
-
-                child_groups.append(
-                    {
-                        "name": label,
-                        "items": rows,
-                        "count": len(rows),
-                        "quantity": quantity_total,
-                    }
-                )
-
-            unassigned = conn.execute(
+        for label in names:
+            rows = conn.execute(
                 """
                 SELECT * FROM items
-                WHERE user_id = ? AND COALESCE(child_name, '') = ''
+                WHERE user_id = ? AND COALESCE(child_name, '') = ?
                 ORDER BY category, name
                 """,
-                (uid,),
+                (uid, label),
             ).fetchall()
+            child_groups.append({
+                "name": label,
+                "items": rows,
+                "count": len(rows),
+                "quantity": sum(int(row["quantity"] or 0) for row in rows),
+            })
 
-        return render_template(
-            "children.html",
-            child_groups=child_groups,
-            unassigned=unassigned,
-            children_count=count,
-        )
+        unassigned = conn.execute(
+            """
+            SELECT * FROM items
+            WHERE user_id = ? AND COALESCE(child_name, '') = ''
+            ORDER BY category, name
+            """,
+            (uid,),
+        ).fetchall()
 
-    except TemplateNotFound:
-        flash("缺少 templates/children.html，请把该文件上传到 templates 文件夹。", "error")
-        return redirect(url_for("index"))
-    except sqlite3.Error as exc:
-        app.logger.exception("儿童收纳数据库错误: %s", exc)
-        flash("儿童收纳数据正在初始化，请刷新后重试。", "error")
-        return redirect(url_for("index"))
-    except Exception as exc:
-        app.logger.exception("儿童收纳页面错误: %s", exc)
-        flash("儿童收纳页面发生错误，请稍后重试。", "error")
-        return redirect(url_for("index"))
+    session["children_count"] = count
+    session["child_names"] = names
+    return render_template(
+        "children.html",
+        child_groups=child_groups,
+        unassigned=unassigned,
+        children_count=count,
+    )
 
 
 @app.route("/locations")

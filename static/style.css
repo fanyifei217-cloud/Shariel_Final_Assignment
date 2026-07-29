@@ -1056,3 +1056,66 @@ body:not(.auth-body) .topbar + .nav-bar + main.container {
     line-height: 1.7;
     margin-bottom: 24px;
 }
+
+.children-settings {
+    margin-top: 18px;
+}
+
+.child-name-form {
+    margin-top: 16px;
+}
+
+.child-name-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.child-name-grid label {
+    display: grid;
+    gap: 7px;
+    color: var(--primary-dark);
+    font-weight: 700;
+}
+
+.child-name-grid input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    background: #fffdf9;
+    color: var(--text);
+    font: inherit;
+}
+
+.children-setting-actions,
+.children-count-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+
+.children-count-actions form {
+    margin: 0;
+}
+
+.danger-button {
+    color: #9d5148;
+    border-color: #e7c4bd;
+}
+
+.child-empty a {
+    display: inline-block;
+    margin-top: 10px;
+    color: var(--primary-dark);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+@media (max-width: 700px) {
+    .child-name-grid {
+        grid-template-columns: 1fr;
+    }
+}
