@@ -60,10 +60,11 @@ def init_database() -> None:
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 display_name TEXT NOT NULL,
-                phone TEXT UNIQUE NOT NULL,
-                email TEXT UNIQUE NOT NULL,
+                phone TEXT UNIQUE,
+                email TEXT UNIQUE,
                 password_hash TEXT NOT NULL,
-                created_at TEXT NOT NULL
+                created_at TEXT NOT NULL,
+                CHECK (phone IS NOT NULL OR email IS NOT NULL)
             )
             """
         )
@@ -281,22 +282,30 @@ def register():
 
     if request.method == "POST":
         display_name = request.form.get("display_name", "").strip()
-        phone = request.form.get("phone", "").strip()
-        email = request.form.get("email", "").strip().lower()
+        register_type = request.form.get("register_type", "phone")
+        account = request.form.get("account", "").strip().lower()
         password = request.form.get("password", "")
         confirm_password = request.form.get("confirm_password", "")
 
-        if not all([display_name, phone, email, password, confirm_password]):
+        phone = None
+        email = None
+
+        if not all([display_name, account, password, confirm_password]):
             flash("请完整填写注册信息。", "error")
-        elif not PHONE_PATTERN.match(phone):
+        elif register_type == "phone" and not PHONE_PATTERN.match(account):
             flash("请输入正确的11位中国大陆手机号。", "error")
-        elif not EMAIL_PATTERN.match(email):
+        elif register_type == "email" and not EMAIL_PATTERN.match(account):
             flash("请输入正确的邮箱地址。", "error")
         elif len(password) < 6:
             flash("密码不能少于6位。", "error")
         elif password != confirm_password:
             flash("两次输入的密码不一致。", "error")
         else:
+            if register_type == "phone":
+                phone = account
+            else:
+                email = account
+
             try:
                 with get_connection() as conn:
                     cursor = conn.execute(
@@ -318,14 +327,11 @@ def register():
                 session["display_name"] = display_name
                 flash("注册成功，欢迎使用家庭物品收纳管理系统。", "success")
                 return redirect(url_for("index"))
-            except sqlite3.IntegrityError as exc:
-                message = str(exc)
-                if "phone" in message:
+            except sqlite3.IntegrityError:
+                if register_type == "phone":
                     flash("该手机号已被注册。", "error")
-                elif "email" in message:
-                    flash("该邮箱已被注册。", "error")
                 else:
-                    flash("注册失败，请更换手机号或邮箱。", "error")
+                    flash("该邮箱已被注册。", "error")
 
     return render_template("register.html")
 

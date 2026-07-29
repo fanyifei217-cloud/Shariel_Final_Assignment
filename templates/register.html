@@ -11,7 +11,7 @@
     <section class="auth-visual">
         <p class="eyebrow brown">CREATE YOUR HOME</p>
         <h1>建立属于你的<br>家庭收纳档案</h1>
-        <p>注册后，每位用户只能查看和管理自己的家庭物品数据。</p>
+        <p>可以选择手机号注册或邮箱注册，每位用户只能查看和管理自己的家庭物品数据。</p>
         <div class="home-scene">
             <div class="shelf">
                 <div class="box">厨房</div>
@@ -26,7 +26,7 @@
         <div class="auth-heading">
             <p class="eyebrow brown">NEW ACCOUNT</p>
             <h2>注册账号</h2>
-            <p>手机号和邮箱均为必填项</p>
+            <p>请选择手机号或邮箱完成注册</p>
         </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -38,29 +38,71 @@
         <form method="post" class="auth-form">
             <label>
                 <span>昵称</span>
-                <input name="display_name" required autocomplete="name" placeholder="例如：小凡的家">
+                <input name="display_name" required autocomplete="name" placeholder="例如：Shariel的家">
             </label>
+
+            <div class="register-tabs">
+                <label class="register-tab active">
+                    <input type="radio" name="register_type" value="phone" checked>
+                    <span>手机号注册</span>
+                </label>
+                <label class="register-tab">
+                    <input type="radio" name="register_type" value="email">
+                    <span>邮箱注册</span>
+                </label>
+            </div>
+
             <label>
-                <span>手机号</span>
-                <input name="phone" required inputmode="numeric" maxlength="11" autocomplete="tel" placeholder="请输入11位手机号">
+                <span id="account-label">手机号</span>
+                <input id="account-input" name="account" required inputmode="numeric" maxlength="11" autocomplete="tel" placeholder="请输入11位手机号">
             </label>
-            <label>
-                <span>邮箱</span>
-                <input type="email" name="email" required autocomplete="email" placeholder="请输入邮箱地址">
-            </label>
+
             <label>
                 <span>密码</span>
                 <input type="password" name="password" required minlength="6" autocomplete="new-password" placeholder="至少6位">
             </label>
+
             <label>
                 <span>确认密码</span>
                 <input type="password" name="confirm_password" required minlength="6" autocomplete="new-password" placeholder="再次输入密码">
             </label>
+
             <button class="button primary auth-submit" type="submit">注册并进入系统</button>
         </form>
 
         <p class="auth-switch">已经有账号？<a href="{{ url_for('login') }}">返回登录</a></p>
     </section>
 </main>
+
+<script>
+const typeRadios = document.querySelectorAll('input[name="register_type"]');
+const accountLabel = document.getElementById("account-label");
+const accountInput = document.getElementById("account-input");
+const tabs = document.querySelectorAll(".register-tab");
+
+function updateRegisterType() {
+    const selected = document.querySelector('input[name="register_type"]:checked').value;
+    tabs.forEach(tab => tab.classList.toggle("active", tab.querySelector("input").checked));
+
+    if (selected === "phone") {
+        accountLabel.textContent = "手机号";
+        accountInput.type = "text";
+        accountInput.inputMode = "numeric";
+        accountInput.maxLength = 11;
+        accountInput.placeholder = "请输入11位手机号";
+        accountInput.autocomplete = "tel";
+    } else {
+        accountLabel.textContent = "邮箱";
+        accountInput.type = "email";
+        accountInput.removeAttribute("maxlength");
+        accountInput.inputMode = "email";
+        accountInput.placeholder = "请输入邮箱地址";
+        accountInput.autocomplete = "email";
+    }
+    accountInput.value = "";
+}
+
+typeRadios.forEach(radio => radio.addEventListener("change", updateRegisterType));
+</script>
 </body>
 </html>

@@ -693,3 +693,32 @@ body:not(.auth-body) .topbar + .nav-bar + main.container {
         margin-top: 18px;
     }
 }
+
+
+.register-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+.register-tab {
+    cursor: pointer;
+}
+.register-tab input {
+    display: none;
+}
+.register-tab span {
+    margin: 0;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    padding: 11px 12px;
+    background: #fffaf5;
+    color: var(--muted);
+    text-align: center;
+    transition: 0.2s ease;
+}
+.register-tab.active span {
+    background: #ead7c8;
+    border-color: #cba88f;
+    color: var(--primary-dark);
+    box-shadow: 0 0 0 3px rgba(184, 137, 103, 0.10);
+}
