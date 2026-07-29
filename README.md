@@ -1,118 +1,80 @@
-# 家庭物品收纳管理系统
+# 家庭物品收纳管理系统（Render 网页版）
 
-这是一个使用 Python、Tkinter 和 SQLite 开发的桌面客户端应用，用于管理家庭物品的分类、编号、位置、数量、状态和有效期。
+这是一个可以上传到 GitHub，并部署到 Render 的 Flask Web 应用。
 
-## 功能
+## 主要功能
 
-- 新增家庭物品
-- 修改物品信息
-- 删除物品记录
-- 按关键词查询
-- 按类别筛选
-- 按状态筛选
-- 统计物品记录数
-- 统计物品总数量
-- 统计30天内到期物品
-- 统计已过期物品
+- 新增、修改和删除家庭物品
+- 设置分类、编号、房间、具体存放位置和数量
+- 按关键词、类别和状态查询
+- 自动识别 30 天内到期物品和已过期物品
+- 首页统计物品记录数、物品总数量、即将过期数量和已过期数量
 - 导出 CSV 文件
-- SQLite 本地数据库保存
+- 适配电脑和手机浏览器
 
 ## 项目结构
 
 ```text
-family_storage_manager/
-├── main.py
-├── README.md
+family_storage_render/
+├── app.py
 ├── requirements.txt
+├── render.yaml
+├── README.md
 ├── .gitignore
-└── LICENSE
+├── templates/
+│   ├── index.html
+│   └── form.html
+└── static/
+    └── style.css
 ```
 
-程序第一次运行后，会自动创建：
+## 本地运行
+
+先安装依赖：
+
+```bash
+python3 -m pip install -r requirements.txt
+```
+
+运行：
+
+```bash
+python3 app.py
+```
+
+浏览器打开：
 
 ```text
-family_storage.db
+http://127.0.0.1:5000
 ```
 
-## 运行环境
+## 上传 GitHub
 
-- Python 3.9 或更高版本
-- Windows、macOS 或 Linux
-- 不需要安装第三方 Python 库
+1. 解压本项目。
+2. 在 GitHub 创建新仓库。
+3. 点击 `uploading an existing file`。
+4. 上传解压后的全部文件和文件夹。
+5. 点击 `Commit changes`。
 
-## 运行方法
+不要只上传 ZIP 文件。
 
-在终端进入项目文件夹：
+## 部署到 Render
 
-```bash
-cd family_storage_manager
-```
+1. 登录 Render。
+2. 点击 `New`。
+3. 选择 `Blueprint`。
+4. 连接存放本项目的 GitHub 仓库。
+5. Render 会自动读取 `render.yaml`。
+6. 点击部署。
+7. 部署成功后，Render 会生成公开网址。
 
-运行程序：
+也可以选择 `New` → `Web Service`，并填写：
 
-```bash
-python main.py
-```
-
-部分 macOS 或 Linux 电脑需要使用：
-
-```bash
-python3 main.py
-```
-
-## 上传到 GitHub
-
-1. 登录 GitHub。
-2. 点击右上角 `+`。
-3. 选择 `New repository`。
-4. 仓库名称填写 `family-storage-manager`。
-5. 创建仓库。
-6. 点击 `uploading an existing file`。
-7. 将本项目中的文件拖入网页。
-8. 点击 `Commit changes`。
-
-注意：GitHub 网页不能直接上传空文件夹。本项目没有空文件夹，因此可以直接上传。
-
-## 打包为桌面应用
-
-先安装 PyInstaller：
-
-```bash
-pip install pyinstaller
-```
-
-在项目目录运行：
-
-```bash
-pyinstaller --onefile --windowed --name 家庭物品收纳管理系统 main.py
-```
-
-打包完成后，可执行文件位于：
-
-```text
-dist/
-```
+- Build Command：`pip install -r requirements.txt`
+- Start Command：`gunicorn app:app`
 
 ## 数据说明
 
-所有物品信息保存在程序目录下的 `family_storage.db` 文件中。
+默认使用 SQLite 数据库 `family_storage.db`。
 
-如需备份数据，只需复制该数据库文件。
-
-## 日期格式
-
-购入日期和有效期统一使用：
-
-```text
-YYYY-MM-DD
-```
-
-例如：
-
-```text
-2026-07-29
-```
-
-## 许可证
-
-本项目使用 MIT License。
+Render 免费实例的本地文件在重新部署或重启时可能被清除，因此该版本适合课程展示和功能演示。正式长期使用时建议改用 PostgreSQL。
