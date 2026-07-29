@@ -1,0 +1,386 @@
+:root {
+    --bg: #f5f7fb;
+    --surface: #ffffff;
+    --text: #1d2433;
+    --muted: #6f7785;
+    --line: #e4e8f0;
+    --primary: #5b63d3;
+    --primary-dark: #454bb4;
+    --danger: #c83d4d;
+    --success-bg: #eaf8ef;
+    --success-text: #237541;
+    --error-bg: #fff0f1;
+    --error-text: #a82f3d;
+    --shadow: 0 14px 34px rgba(34, 44, 76, 0.08);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+.container {
+    width: min(1180px, calc(100% - 32px));
+    margin: 0 auto;
+}
+
+.container.narrow {
+    width: min(880px, calc(100% - 32px));
+}
+
+.topbar {
+    padding: 34px 0 70px;
+    color: white;
+    background: linear-gradient(135deg, #5159c8 0%, #747be3 100%);
+}
+
+.topbar.compact {
+    padding-bottom: 34px;
+}
+
+.topbar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.topbar h1 {
+    margin: 4px 0 6px;
+    font-size: clamp(27px, 4vw, 42px);
+}
+
+.eyebrow {
+    margin: 0;
+    letter-spacing: 0.18em;
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 0.75;
+}
+
+.subtitle {
+    margin: 0;
+    opacity: 0.82;
+}
+
+main.container {
+    margin-top: -42px;
+    padding-bottom: 48px;
+}
+
+main.container.narrow {
+    margin-top: 28px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.stat-card,
+.panel {
+    background: var(--surface);
+    border: 1px solid rgba(228, 232, 240, 0.8);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+}
+
+.stat-card {
+    padding: 22px;
+}
+
+.stat-card span {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.stat-card strong {
+    display: block;
+    margin-top: 8px;
+    font-size: 32px;
+}
+
+.panel {
+    margin-bottom: 18px;
+    padding: 20px;
+}
+
+.filters {
+    display: grid;
+    grid-template-columns: 1.4fr 0.8fr 0.8fr auto;
+    align-items: end;
+    gap: 14px;
+}
+
+label span {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    background: #fff;
+    color: var(--text);
+    padding: 11px 12px;
+    font: inherit;
+    outline: none;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #9ca2ed;
+    box-shadow: 0 0 0 3px rgba(91, 99, 211, 0.12);
+}
+
+textarea {
+    resize: vertical;
+}
+
+.filter-actions,
+.form-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    border: 0;
+    border-radius: 11px;
+    padding: 0 16px;
+    cursor: pointer;
+    text-decoration: none;
+    font: inherit;
+    font-weight: 700;
+}
+
+.button.primary {
+    color: white;
+    background: var(--primary);
+}
+
+.button.primary:hover {
+    background: var(--primary-dark);
+}
+
+.topbar .button.primary {
+    background: white;
+    color: var(--primary-dark);
+}
+
+.button.secondary {
+    color: var(--text);
+    background: #eef0f6;
+}
+
+.panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.panel-heading h2 {
+    margin: 0 0 3px;
+    font-size: 21px;
+}
+
+.panel-heading p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 920px;
+}
+
+th,
+td {
+    padding: 14px 12px;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    vertical-align: middle;
+}
+
+th {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+td small {
+    display: block;
+    margin-top: 4px;
+    color: var(--muted);
+}
+
+code {
+    border-radius: 6px;
+    background: #f0f1f7;
+    padding: 4px 7px;
+}
+
+.status {
+    display: inline-block;
+    border-radius: 999px;
+    background: #edf0f6;
+    padding: 5px 9px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.status-正常使用 {
+    background: #e9f7ef;
+    color: #257343;
+}
+
+.status-即将过期 {
+    background: #fff4db;
+    color: #946200;
+}
+
+.status-已过期,
+.status-损坏,
+.status-已丢弃 {
+    background: #ffebed;
+    color: #a83442;
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.actions form {
+    margin: 0;
+}
+
+.text-link,
+.danger-link {
+    border: 0;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    font: inherit;
+    text-decoration: none;
+}
+
+.text-link {
+    color: var(--primary);
+}
+
+.danger-link {
+    color: var(--danger);
+}
+
+.empty {
+    padding: 58px 20px;
+    text-align: center;
+    color: var(--muted);
+}
+
+.empty-icon {
+    font-size: 44px;
+}
+
+.empty h3 {
+    margin-bottom: 7px;
+    color: var(--text);
+}
+
+.form-panel {
+    padding: 28px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-actions {
+    margin-top: 24px;
+}
+
+.flash {
+    margin-bottom: 16px;
+    border-radius: 12px;
+    padding: 13px 15px;
+    box-shadow: var(--shadow);
+}
+
+.flash.success {
+    background: var(--success-bg);
+    color: var(--success-text);
+}
+
+.flash.error {
+    background: var(--error-bg);
+    color: var(--error-text);
+}
+
+@media (max-width: 900px) {
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .filters {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .filter-actions {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 600px) {
+    .topbar-inner {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .stats,
+    .filters,
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .full-width {
+        grid-column: auto;
+    }
+
+    main.container {
+        margin-top: -28px;
+    }
+}
