@@ -41,7 +41,12 @@
     <section class="personalized-home {{ personalization.accent_class }}">
         <div class="personalized-copy">
             <span class="household-badge">{{ personalization.badge }}</span>
-            <p class="household-type">当前居住情况：{{ household_type }}</p>
+            <p class="household-type">
+                当前居住情况：{{ household_type }}
+                {% if household_type == "已婚有子（三人及以上）" %}
+                · 儿童 {{ children_count }} 名
+                {% endif %}
+            </p>
             <h2>{{ personalization.title }}</h2>
             <p>{{ personalization.subtitle }}</p>
         </div>
@@ -54,6 +59,16 @@
                 {% endfor %}
             </ul>
         </div>
+
+        {% if household_type == "已婚有子（三人及以上）" %}
+        <div class="children-summary">
+            <strong>儿童收纳建议</strong>
+            <span>
+                当前登记 {{ children_count }} 名儿童，建议分别建立儿童衣物、书籍、
+                常用药品和学习用品的独立收纳位置。
+            </span>
+        </div>
+        {% endif %}
 
         <div class="recommended-categories">
             <span>建议优先管理：</span>

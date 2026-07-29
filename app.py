@@ -103,6 +103,7 @@ def init_database() -> None:
                 phone TEXT UNIQUE,
                 email TEXT UNIQUE,
                 household_type TEXT NOT NULL DEFAULT '独居',
+                children_count INTEGER NOT NULL DEFAULT 0,
                 password_hash TEXT NOT NULL,
                 created_at TEXT NOT NULL,
                 CHECK (phone IS NOT NULL OR email IS NOT NULL)
@@ -162,6 +163,11 @@ def init_database() -> None:
         if "household_type" not in user_columns:
             conn.execute(
                 "ALTER TABLE users ADD COLUMN household_type TEXT NOT NULL DEFAULT '独居'"
+            )
+
+        if "children_count" not in user_columns:
+            conn.execute(
+                "ALTER TABLE users ADD COLUMN children_count INTEGER NOT NULL DEFAULT 0"
             )
 
 
@@ -332,6 +338,7 @@ def register():
         register_type = request.form.get("register_type", "phone")
         account = request.form.get("account", "").strip().lower()
         household_type = request.form.get("household_type", "独居").strip()
+        children_count_raw = request.form.get("children_count", "0").strip()
         password = request.form.get("password", "")
         confirm_password = request.form.get("confirm_password", "")
 
@@ -344,10 +351,23 @@ def register():
             "已婚有子（三人及以上）",
         }
 
+        try:
+            children_count = int(children_count_raw or 0)
+            if children_count < 0:
+                raise ValueError
+        except ValueError:
+            children_count = -1
+
         if not all([display_name, account, household_type, password, confirm_password]):
             flash("请完整填写注册信息。", "error")
         elif household_type not in allowed_household_types:
             flash("请选择正确的居住成员情况。", "error")
+        elif children_count < 0:
+            flash("儿童数量必须是大于或等于0的整数。", "error")
+        elif household_type == "已婚有子（三人及以上）" and children_count < 1:
+            flash("选择“已婚有子”时，请填写至少1名儿童。", "error")
+        elif household_type != "已婚有子（三人及以上）" and children_count != 0:
+            children_count = 0
         elif register_type == "phone" and not PHONE_PATTERN.match(account):
             flash("请输入正确的11位中国大陆手机号。", "error")
         elif register_type == "email" and not EMAIL_PATTERN.match(account):
@@ -367,14 +387,15 @@ def register():
                     cursor = conn.execute(
                         """
                         INSERT INTO users
-                        (display_name, phone, email, household_type, password_hash, created_at)
-                        VALUES (?, ?, ?, ?, ?, ?)
+                        (display_name, phone, email, household_type, children_count, password_hash, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
                         """,
                         (
                             display_name,
                             phone,
                             email,
                             household_type,
+                            children_count,
                             generate_password_hash(password),
                             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         ),
@@ -383,6 +404,7 @@ def register():
                 session["user_id"] = user_id
                 session["display_name"] = display_name
                 session["household_type"] = household_type
+                session["children_count"] = children_count
                 flash("注册成功，欢迎使用家庭物品收纳管理系统。", "success")
                 return redirect(url_for("index"))
             except sqlite3.IntegrityError:
@@ -413,6 +435,7 @@ def login():
             session["user_id"] = user["id"]
             session["display_name"] = user["display_name"]
             session["household_type"] = user["household_type"]
+            session["children_count"] = user["children_count"]
             flash("登录成功。", "success")
             return redirect(url_for("index"))
 
@@ -460,6 +483,7 @@ def index():
         ).fetchone()[0]
 
     household_type = session.get("household_type", "独居")
+    children_count = int(session.get("children_count", 0))
     personalization = HOUSEHOLD_PERSONALIZATION.get(
         household_type,
         HOUSEHOLD_PERSONALIZATION["独居"],
@@ -480,6 +504,7 @@ def index():
         low_stock_count=low_stock_count,
         display_name=session.get("display_name", "用户"),
         household_type=household_type,
+        children_count=children_count,
         personalization=personalization,
     )
 

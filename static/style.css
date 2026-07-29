@@ -881,3 +881,36 @@ body:not(.auth-body) .topbar + .nav-bar + main.container {
         grid-column: auto;
     }
 }
+
+
+.hidden-field {
+    display: none !important;
+}
+
+.children-summary {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: rgba(255, 250, 245, 0.78);
+    border: 1px solid var(--line);
+}
+
+.children-summary strong {
+    white-space: nowrap;
+    color: var(--primary-dark);
+}
+
+.children-summary span {
+    color: var(--muted);
+    line-height: 1.65;
+}
+
+@media (max-width: 600px) {
+    .children-summary {
+        flex-direction: column;
+        gap: 5px;
+    }
+}

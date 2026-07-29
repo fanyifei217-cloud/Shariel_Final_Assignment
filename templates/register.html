@@ -44,12 +44,18 @@
 
             <label>
                 <span>居住成员情况</span>
-                <select name="household_type" required>
+                <select name="household_type" id="household-type" required>
                     <option value="独居">独居</option>
                     <option value="情侣或已婚无子（两人）">情侣或已婚无子（两人）</option>
                     <option value="已婚有子（三人及以上）">已婚有子（三人及以上）</option>
                 </select>
                 <small class="privacy-note">此信息仅用于个性化页面展示，不会用于其他用途。</small>
+            </label>
+
+            <label id="children-count-field" class="hidden-field">
+                <span>儿童数量</span>
+                <input type="number" name="children_count" id="children-count" min="1" value="1" placeholder="请输入儿童数量">
+                <small class="privacy-note">用于生成更符合家庭人数的收纳建议。</small>
             </label>
 
             <div class="register-tabs">
@@ -114,6 +120,25 @@ function updateRegisterType() {
 }
 
 typeRadios.forEach(radio => radio.addEventListener("change", updateRegisterType));
+
+const householdType = document.getElementById("household-type");
+const childrenField = document.getElementById("children-count-field");
+const childrenInput = document.getElementById("children-count");
+
+function updateChildrenField() {
+    const hasChildren = householdType.value === "已婚有子（三人及以上）";
+    childrenField.classList.toggle("hidden-field", !hasChildren);
+    childrenInput.required = hasChildren;
+    childrenInput.disabled = !hasChildren;
+    if (!hasChildren) {
+        childrenInput.value = "0";
+    } else if (Number(childrenInput.value) < 1) {
+        childrenInput.value = "1";
+    }
+}
+
+householdType.addEventListener("change", updateChildrenField);
+updateChildrenField();
 </script>
 </body>
 </html>
