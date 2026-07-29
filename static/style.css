@@ -1,17 +1,17 @@
 :root {
-    --bg: #f5f7fb;
-    --surface: #ffffff;
-    --text: #1d2433;
-    --muted: #6f7785;
-    --line: #e4e8f0;
-    --primary: #5b63d3;
-    --primary-dark: #454bb4;
-    --danger: #c83d4d;
-    --success-bg: #eaf8ef;
-    --success-text: #237541;
-    --error-bg: #fff0f1;
-    --error-text: #a82f3d;
-    --shadow: 0 14px 34px rgba(34, 44, 76, 0.08);
+    --bg: #f7f1ea;
+    --surface: #fffaf5;
+    --text: #4a382f;
+    --muted: #8a7467;
+    --line: #eadccf;
+    --primary: #b88967;
+    --primary-dark: #956b4f;
+    --danger: #b45f52;
+    --success-bg: #eef5e9;
+    --success-text: #5f7651;
+    --error-bg: #faece8;
+    --error-text: #9b5147;
+    --shadow: 0 14px 34px rgba(113, 78, 55, 0.10);
 }
 
 * {
@@ -37,8 +37,8 @@ body {
 
 .topbar {
     padding: 34px 0 70px;
-    color: white;
-    background: linear-gradient(135deg, #5159c8 0%, #747be3 100%);
+    color: #4a382f;
+    background: linear-gradient(135deg, #d7b79f 0%, #efd8c4 100%);
 }
 
 .topbar.compact {
@@ -144,8 +144,8 @@ textarea {
 input:focus,
 select:focus,
 textarea:focus {
-    border-color: #9ca2ed;
-    box-shadow: 0 0 0 3px rgba(91, 99, 211, 0.12);
+    border-color: #cba88f;
+    box-shadow: 0 0 0 3px rgba(184, 137, 103, 0.15);
 }
 
 textarea {
@@ -183,13 +183,13 @@ textarea {
 }
 
 .topbar .button.primary {
-    background: white;
+    background: #fffaf5;
     color: var(--primary-dark);
 }
 
 .button.secondary {
     color: var(--text);
-    background: #eef0f6;
+    background: #f1e6dc;
 }
 
 .panel-heading {
@@ -242,34 +242,34 @@ td small {
 
 code {
     border-radius: 6px;
-    background: #f0f1f7;
+    background: #f3e8de;
     padding: 4px 7px;
 }
 
 .status {
     display: inline-block;
     border-radius: 999px;
-    background: #edf0f6;
+    background: #f2e7dd;
     padding: 5px 9px;
     font-size: 12px;
     white-space: nowrap;
 }
 
 .status-正常使用 {
-    background: #e9f7ef;
-    color: #257343;
+    background: #edf4e8;
+    color: #647b57;
 }
 
 .status-即将过期 {
-    background: #fff4db;
-    color: #946200;
+    background: #fff2dc;
+    color: #9a6b2f;
 }
 
 .status-已过期,
 .status-损坏,
 .status-已丢弃 {
-    background: #ffebed;
-    color: #a83442;
+    background: #fae8e3;
+    color: #a1574d;
 }
 
 .actions {
