@@ -62,6 +62,7 @@ def init_database() -> None:
                 display_name TEXT NOT NULL,
                 phone TEXT UNIQUE,
                 email TEXT UNIQUE,
+                household_type TEXT NOT NULL DEFAULT '独居',
                 password_hash TEXT NOT NULL,
                 created_at TEXT NOT NULL,
                 CHECK (phone IS NOT NULL OR email IS NOT NULL)
@@ -116,6 +117,12 @@ def init_database() -> None:
         shopping_columns = {row["name"] for row in conn.execute("PRAGMA table_info(shopping_items)")}
         if "user_id" not in shopping_columns:
             conn.execute("ALTER TABLE shopping_items ADD COLUMN user_id INTEGER")
+
+        user_columns = {row["name"] for row in conn.execute("PRAGMA table_info(users)")}
+        if "household_type" not in user_columns:
+            conn.execute(
+                "ALTER TABLE users ADD COLUMN household_type TEXT NOT NULL DEFAULT '独居'"
+            )
 
 
 def login_required(view):
@@ -284,14 +291,23 @@ def register():
         display_name = request.form.get("display_name", "").strip()
         register_type = request.form.get("register_type", "phone")
         account = request.form.get("account", "").strip().lower()
+        household_type = request.form.get("household_type", "独居").strip()
         password = request.form.get("password", "")
         confirm_password = request.form.get("confirm_password", "")
 
         phone = None
         email = None
 
-        if not all([display_name, account, password, confirm_password]):
+        allowed_household_types = {
+            "独居",
+            "情侣或已婚无子（两人）",
+            "已婚有子（三人及以上）",
+        }
+
+        if not all([display_name, account, household_type, password, confirm_password]):
             flash("请完整填写注册信息。", "error")
+        elif household_type not in allowed_household_types:
+            flash("请选择正确的居住成员情况。", "error")
         elif register_type == "phone" and not PHONE_PATTERN.match(account):
             flash("请输入正确的11位中国大陆手机号。", "error")
         elif register_type == "email" and not EMAIL_PATTERN.match(account):
@@ -311,13 +327,14 @@ def register():
                     cursor = conn.execute(
                         """
                         INSERT INTO users
-                        (display_name, phone, email, password_hash, created_at)
-                        VALUES (?, ?, ?, ?, ?)
+                        (display_name, phone, email, household_type, password_hash, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?)
                         """,
                         (
                             display_name,
                             phone,
                             email,
+                            household_type,
                             generate_password_hash(password),
                             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         ),
@@ -325,6 +342,7 @@ def register():
                     user_id = cursor.lastrowid
                 session["user_id"] = user_id
                 session["display_name"] = display_name
+                session["household_type"] = household_type
                 flash("注册成功，欢迎使用家庭物品收纳管理系统。", "success")
                 return redirect(url_for("index"))
             except sqlite3.IntegrityError:
@@ -354,6 +372,7 @@ def login():
         if user and check_password_hash(user["password_hash"], password):
             session["user_id"] = user["id"]
             session["display_name"] = user["display_name"]
+            session["household_type"] = user["household_type"]
             flash("登录成功。", "success")
             return redirect(url_for("index"))
 

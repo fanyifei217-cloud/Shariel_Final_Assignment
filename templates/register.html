@@ -41,6 +41,17 @@
                 <input name="display_name" required autocomplete="name" placeholder="例如：Shariel的家">
             </label>
 
+
+            <label>
+                <span>居住成员情况</span>
+                <select name="household_type" required>
+                    <option value="独居">独居</option>
+                    <option value="情侣或已婚无子（两人）">情侣或已婚无子（两人）</option>
+                    <option value="已婚有子（三人及以上）">已婚有子（三人及以上）</option>
+                </select>
+                <small class="privacy-note">此信息仅用于个性化页面展示，不会用于其他用途。</small>
+            </label>
+
             <div class="register-tabs">
                 <label class="register-tab active">
                     <input type="radio" name="register_type" value="phone" checked>

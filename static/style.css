@@ -750,3 +750,21 @@ body:not(.auth-body) .topbar + .nav-bar + main.container {
         font-size: clamp(28px, 7vw, 40px);
     }
 }
+
+
+.privacy-note {
+    display: block;
+    margin-top: 7px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.55;
+    font-weight: 400;
+}
+
+.login-note {
+    margin: -14px 0 22px;
+    padding: 9px 11px;
+    border-radius: 10px;
+    background: #f4e8de;
+    color: #806a5d;
+}
