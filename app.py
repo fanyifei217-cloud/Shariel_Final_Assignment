@@ -10,6 +10,7 @@ from functools import wraps
 from pathlib import Path
 
 import qrcode
+from jinja2 import TemplateNotFound
 from flask import (
     Flask,
     flash,
@@ -786,12 +787,16 @@ def children_storage():
             (uid,),
         ).fetchall()
 
-    return render_template(
-        "children.html",
-        child_groups=child_groups,
-        unassigned=unassigned,
-        children_count=len(labels),
-    )
+    try:
+        return render_template(
+            "children.html",
+            child_groups=child_groups,
+            unassigned=unassigned,
+            children_count=len(labels),
+        )
+    except TemplateNotFound:
+        flash("儿童收纳页面文件缺失，请重新上传 templates/children.html。", "error")
+        return redirect(url_for("index"))
 
 
 @app.route("/locations")
@@ -869,6 +874,12 @@ def export_csv():
         as_attachment=True,
         download_name="家庭物品清单.csv",
     )
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    app.logger.exception("Internal server error: %s", error)
+    return render_template("500.html"), 500
 
 
 @app.route("/health")

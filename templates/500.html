@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>系统暂时无法访问</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="auth-body">
+<main class="auth-shell error-shell">
+    <section class="auth-card error-card">
+        <p class="eyebrow brown">SYSTEM NOTICE</p>
+        <h1>页面暂时无法打开</h1>
+        <p>系统遇到了一个临时错误。请返回首页重试；若刚更新过 GitHub，请等待 Render 完成重新部署。</p>
+        <a class="button primary" href="{{ url_for('index') }}">返回首页</a>
+    </section>
+</main>
+</body>
+</html>

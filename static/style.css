@@ -1035,3 +1035,24 @@ body:not(.auth-body) .topbar + .nav-bar + main.container {
         gap: 8px;
     }
 }
+
+
+.error-shell {
+    grid-template-columns: 1fr;
+    width: min(680px, calc(100% - 32px));
+}
+
+.error-card {
+    text-align: center;
+}
+
+.error-card h1 {
+    margin: 10px 0;
+    font-size: 34px;
+}
+
+.error-card p {
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 24px;
+}
