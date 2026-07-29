@@ -80,9 +80,9 @@
                 <a class="button primary" href="{{ url_for('add_item', child=group.name) }}">＋ 添加物品</a>
             </div>
 
-            {% if group.items %}
+            {% if group['items'] %}
             <div class="child-item-list">
-                {% for item in group.items %}
+                {% for item in group['items'] %}
                 <div class="child-item-row">
                     <div>
                         <strong>{{ item.name }}</strong>
