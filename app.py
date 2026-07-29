@@ -42,6 +42,46 @@ CATEGORY_PREFIXES = {
 
 STATUSES = ["正常使用", "闲置", "借出", "损坏", "已丢弃", "即将过期", "已过期"]
 
+
+HOUSEHOLD_PERSONALIZATION = {
+    "独居": {
+        "badge": "一人生活",
+        "title": "一个人的家，也可以井井有条",
+        "subtitle": "重点管理日常消耗品、食品药品和个人物品，让独居生活更轻松。",
+        "tips": [
+            "优先设置食品和药品的有效期",
+            "为纸巾、洗衣液等设置最低库存",
+            "使用二维码快速定位储物柜和收纳箱",
+        ],
+        "recommended_categories": ["食品", "药品", "清洁用品", "证件资料"],
+        "accent_class": "solo",
+    },
+    "情侣或已婚无子（两人）": {
+        "badge": "双人生活",
+        "title": "两个人的家，共享也要清清楚楚",
+        "subtitle": "适合管理共同用品、个人物品和共享购物清单，减少重复购买。",
+        "tips": [
+            "将共同用品集中登记，避免重复购买",
+            "把个人物品备注为所属成员",
+            "使用购物清单同步家庭补货需求",
+        ],
+        "recommended_categories": ["厨房用品", "清洁用品", "电子产品", "衣物"],
+        "accent_class": "couple",
+    },
+    "已婚有子（三人及以上）": {
+        "badge": "家庭生活",
+        "title": "全家的物品，各有各的位置",
+        "subtitle": "适合管理儿童用品、家庭常备药、学习用品和大容量日用品。",
+        "tips": [
+            "为儿童用品和药品设置清晰位置",
+            "常用消耗品设置最低库存提醒",
+            "按房间和收纳箱生成二维码标签",
+        ],
+        "recommended_categories": ["药品", "食品", "书籍", "衣物"],
+        "accent_class": "family",
+    },
+}
+
 PHONE_PATTERN = re.compile(r"^1[3-9]\d{9}$")
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
@@ -419,6 +459,12 @@ def index():
             (uid,),
         ).fetchone()[0]
 
+    household_type = session.get("household_type", "独居")
+    personalization = HOUSEHOLD_PERSONALIZATION.get(
+        household_type,
+        HOUSEHOLD_PERSONALIZATION["独居"],
+    )
+
     return render_template(
         "index.html",
         items=items,
@@ -433,6 +479,8 @@ def index():
         expired_count=expired_count,
         low_stock_count=low_stock_count,
         display_name=session.get("display_name", "用户"),
+        household_type=household_type,
+        personalization=personalization,
     )
 
 

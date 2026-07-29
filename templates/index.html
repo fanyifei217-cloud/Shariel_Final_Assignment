@@ -38,6 +38,31 @@
         {% endfor %}
     {% endwith %}
 
+    <section class="personalized-home {{ personalization.accent_class }}">
+        <div class="personalized-copy">
+            <span class="household-badge">{{ personalization.badge }}</span>
+            <p class="household-type">当前居住情况：{{ household_type }}</p>
+            <h2>{{ personalization.title }}</h2>
+            <p>{{ personalization.subtitle }}</p>
+        </div>
+
+        <div class="personalized-tips">
+            <h3>为你推荐</h3>
+            <ul>
+                {% for tip in personalization.tips %}
+                <li>{{ tip }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="recommended-categories">
+            <span>建议优先管理：</span>
+            {% for category in personalization.recommended_categories %}
+            <a href="{{ url_for('index', category=category) }}">{{ category }}</a>
+            {% endfor %}
+        </div>
+    </section>
+
     <section class="stats five">
         <article class="stat-card"><span>物品记录数</span><strong>{{ record_count }}</strong></article>
         <article class="stat-card"><span>物品总数量</span><strong>{{ quantity_total }}</strong></article>
