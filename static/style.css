@@ -665,3 +665,31 @@ label small {
         align-items: flex-start;
     }
 }
+
+
+/* 修复首页导航栏与统计卡片重叠 */
+.nav-bar {
+    position: relative;
+    top: auto;
+    z-index: 5;
+}
+
+body:not(.auth-body) main.container {
+    margin-top: 24px;
+}
+
+body:not(.auth-body) .topbar + .nav-bar + main.container {
+    margin-top: 24px;
+}
+
+.stats {
+    position: relative;
+    z-index: 1;
+    margin-top: 0;
+}
+
+@media (max-width: 600px) {
+    body:not(.auth-body) main.container {
+        margin-top: 18px;
+    }
+}
