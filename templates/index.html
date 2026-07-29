@@ -14,7 +14,11 @@
             <h1>家庭物品收纳管理系统</h1>
             <p class="subtitle">分类、编号、提醒、购物与二维码收纳</p>
         </div>
+        <div class="user-actions">
+        <span class="welcome-user">你好，{{ display_name }}</span>
         <a class="button primary" href="{{ url_for('add_item') }}">＋ 新增物品</a>
+        <a class="button secondary" href="{{ url_for('logout') }}">退出登录</a>
+    </div>
     </div>
 </header>
 

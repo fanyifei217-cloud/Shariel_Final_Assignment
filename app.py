@@ -3,8 +3,10 @@ from __future__ import annotations
 import csv
 import io
 import os
+import re
 import sqlite3
 from datetime import date, datetime
+from functools import wraps
 from pathlib import Path
 
 import qrcode
@@ -15,8 +17,10 @@ from flask import (
     render_template,
     request,
     send_file,
+    session,
     url_for,
 )
+from werkzeug.security import check_password_hash, generate_password_hash
 
 BASE_DIR = Path(__file__).resolve().parent
 DEFAULT_DB = BASE_DIR / "family_storage.db"
@@ -31,19 +35,15 @@ CATEGORIES = [
 ]
 
 CATEGORY_PREFIXES = {
-    "衣物": "CLO",
-    "书籍": "BOOK",
-    "食品": "FOOD",
-    "药品": "MED",
-    "厨房用品": "KIT",
-    "清洁用品": "CLE",
-    "电子产品": "ELE",
-    "工具": "TOOL",
-    "证件资料": "DOC",
-    "其他": "OTH",
+    "衣物": "CLO", "书籍": "BOOK", "食品": "FOOD", "药品": "MED",
+    "厨房用品": "KIT", "清洁用品": "CLE", "电子产品": "ELE",
+    "工具": "TOOL", "证件资料": "DOC", "其他": "OTH",
 }
 
 STATUSES = ["正常使用", "闲置", "借出", "损坏", "已丢弃", "即将过期", "已过期"]
+
+PHONE_PATTERN = re.compile(r"^1[3-9]\d{9}$")
+EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 def get_connection() -> sqlite3.Connection:
@@ -57,9 +57,23 @@ def init_database() -> None:
     with get_connection() as conn:
         conn.execute(
             """
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                display_name TEXT NOT NULL,
+                phone TEXT UNIQUE NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+            """
+        )
+
+        conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS items (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                item_code TEXT UNIQUE NOT NULL,
+                user_id INTEGER NOT NULL,
+                item_code TEXT NOT NULL,
                 name TEXT NOT NULL,
                 category TEXT NOT NULL,
                 room TEXT NOT NULL,
@@ -70,11 +84,16 @@ def init_database() -> None:
                 expiry_date TEXT,
                 status TEXT NOT NULL DEFAULT '正常使用',
                 notes TEXT,
-                created_at TEXT NOT NULL
+                created_at TEXT NOT NULL,
+                UNIQUE(user_id, item_code),
+                FOREIGN KEY(user_id) REFERENCES users(id)
             )
             """
         )
+
         columns = {row["name"] for row in conn.execute("PRAGMA table_info(items)")}
+        if "user_id" not in columns:
+            conn.execute("ALTER TABLE items ADD COLUMN user_id INTEGER")
         if "min_quantity" not in columns:
             conn.execute("ALTER TABLE items ADD COLUMN min_quantity INTEGER NOT NULL DEFAULT 0")
 
@@ -82,15 +101,34 @@ def init_database() -> None:
             """
             CREATE TABLE IF NOT EXISTS shopping_items (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
                 name TEXT NOT NULL,
                 quantity INTEGER NOT NULL DEFAULT 1,
                 source_item_id INTEGER,
                 completed INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL,
-                UNIQUE(name, completed)
+                FOREIGN KEY(user_id) REFERENCES users(id)
             )
             """
         )
+
+        shopping_columns = {row["name"] for row in conn.execute("PRAGMA table_info(shopping_items)")}
+        if "user_id" not in shopping_columns:
+            conn.execute("ALTER TABLE shopping_items ADD COLUMN user_id INTEGER")
+
+
+def login_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if "user_id" not in session:
+            flash("请先登录后再使用系统。", "error")
+            return redirect(url_for("login"))
+        return view(*args, **kwargs)
+    return wrapped
+
+
+def current_user_id() -> int:
+    return int(session["user_id"])
 
 
 def normalize_status(expiry_date: str, status: str) -> str:
@@ -114,8 +152,8 @@ def next_item_code(category: str) -> str:
     prefix = CATEGORY_PREFIXES.get(category, "OTH")
     with get_connection() as conn:
         rows = conn.execute(
-            "SELECT item_code FROM items WHERE item_code LIKE ?",
-            (f"{prefix}-%",),
+            "SELECT item_code FROM items WHERE user_id = ? AND item_code LIKE ?",
+            (current_user_id(), f"{prefix}-%"),
         ).fetchall()
     numbers = []
     for row in rows:
@@ -169,7 +207,10 @@ def validate_form(form) -> tuple[dict, str | None]:
 
 def refresh_expiry_statuses() -> None:
     with get_connection() as conn:
-        rows = conn.execute("SELECT id, expiry_date, status FROM items").fetchall()
+        rows = conn.execute(
+            "SELECT id, expiry_date, status FROM items WHERE user_id = ?",
+            (current_user_id(),),
+        ).fetchall()
         for row in rows:
             new_status = normalize_status(row["expiry_date"] or "", row["status"])
             if new_status != row["status"]:
@@ -178,35 +219,41 @@ def refresh_expiry_statuses() -> None:
 
 def sync_low_stock_to_shopping() -> int:
     created = 0
+    uid = current_user_id()
     with get_connection() as conn:
         rows = conn.execute(
             """
             SELECT id, name, quantity, min_quantity
             FROM items
-            WHERE min_quantity > 0 AND quantity <= min_quantity
-            """
+            WHERE user_id = ? AND min_quantity > 0 AND quantity <= min_quantity
+            """,
+            (uid,),
         ).fetchall()
         for row in rows:
             need = max(row["min_quantity"] - row["quantity"] + 1, 1)
             exists = conn.execute(
-                "SELECT id FROM shopping_items WHERE name = ? AND completed = 0",
-                (row["name"],),
+                """
+                SELECT id FROM shopping_items
+                WHERE user_id = ? AND name = ? AND completed = 0
+                """,
+                (uid, row["name"]),
             ).fetchone()
             if not exists:
                 conn.execute(
                     """
-                    INSERT INTO shopping_items (name, quantity, source_item_id, completed, created_at)
-                    VALUES (?, ?, ?, 0, ?)
+                    INSERT INTO shopping_items
+                    (user_id, name, quantity, source_item_id, completed, created_at)
+                    VALUES (?, ?, ?, ?, 0, ?)
                     """,
-                    (row["name"], need, row["id"], datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+                    (uid, row["name"], need, row["id"], datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
                 )
                 created += 1
     return created
 
 
 def query_items(keyword: str = "", category: str = "全部", status: str = "全部"):
-    sql = "SELECT * FROM items WHERE 1=1"
-    params: list[str] = []
+    sql = "SELECT * FROM items WHERE user_id = ?"
+    params: list = [current_user_id()]
     if keyword:
         sql += """
             AND (
@@ -227,21 +274,124 @@ def query_items(keyword: str = "", category: str = "全部", status: str = "全�
         return conn.execute(sql, params).fetchall()
 
 
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if "user_id" in session:
+        return redirect(url_for("index"))
+
+    if request.method == "POST":
+        display_name = request.form.get("display_name", "").strip()
+        phone = request.form.get("phone", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        if not all([display_name, phone, email, password, confirm_password]):
+            flash("请完整填写注册信息。", "error")
+        elif not PHONE_PATTERN.match(phone):
+            flash("请输入正确的11位中国大陆手机号。", "error")
+        elif not EMAIL_PATTERN.match(email):
+            flash("请输入正确的邮箱地址。", "error")
+        elif len(password) < 6:
+            flash("密码不能少于6位。", "error")
+        elif password != confirm_password:
+            flash("两次输入的密码不一致。", "error")
+        else:
+            try:
+                with get_connection() as conn:
+                    cursor = conn.execute(
+                        """
+                        INSERT INTO users
+                        (display_name, phone, email, password_hash, created_at)
+                        VALUES (?, ?, ?, ?, ?)
+                        """,
+                        (
+                            display_name,
+                            phone,
+                            email,
+                            generate_password_hash(password),
+                            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        ),
+                    )
+                    user_id = cursor.lastrowid
+                session["user_id"] = user_id
+                session["display_name"] = display_name
+                flash("注册成功，欢迎使用家庭物品收纳管理系统。", "success")
+                return redirect(url_for("index"))
+            except sqlite3.IntegrityError as exc:
+                message = str(exc)
+                if "phone" in message:
+                    flash("该手机号已被注册。", "error")
+                elif "email" in message:
+                    flash("该邮箱已被注册。", "error")
+                else:
+                    flash("注册失败，请更换手机号或邮箱。", "error")
+
+    return render_template("register.html")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if "user_id" in session:
+        return redirect(url_for("index"))
+
+    if request.method == "POST":
+        account = request.form.get("account", "").strip().lower()
+        password = request.form.get("password", "")
+
+        with get_connection() as conn:
+            user = conn.execute(
+                "SELECT * FROM users WHERE phone = ? OR email = ?",
+                (account, account),
+            ).fetchone()
+
+        if user and check_password_hash(user["password_hash"], password):
+            session["user_id"] = user["id"]
+            session["display_name"] = user["display_name"]
+            flash("登录成功。", "success")
+            return redirect(url_for("index"))
+
+        flash("手机号、邮箱或密码错误。", "error")
+
+    return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("你已安全退出登录。", "success")
+    return redirect(url_for("login"))
+
+
 @app.route("/")
+@login_required
 def index():
     refresh_expiry_statuses()
     keyword = request.args.get("keyword", "").strip()
     category = request.args.get("category", "全部")
     status = request.args.get("status", "全部")
     items = query_items(keyword, category, status)
+    uid = current_user_id()
 
     with get_connection() as conn:
-        record_count = conn.execute("SELECT COUNT(*) FROM items").fetchone()[0]
-        quantity_total = conn.execute("SELECT COALESCE(SUM(quantity), 0) FROM items").fetchone()[0]
-        expiring_count = conn.execute("SELECT COUNT(*) FROM items WHERE status = '即将过期'").fetchone()[0]
-        expired_count = conn.execute("SELECT COUNT(*) FROM items WHERE status = '已过期'").fetchone()[0]
+        record_count = conn.execute(
+            "SELECT COUNT(*) FROM items WHERE user_id = ?", (uid,)
+        ).fetchone()[0]
+        quantity_total = conn.execute(
+            "SELECT COALESCE(SUM(quantity), 0) FROM items WHERE user_id = ?", (uid,)
+        ).fetchone()[0]
+        expiring_count = conn.execute(
+            "SELECT COUNT(*) FROM items WHERE user_id = ? AND status = '即将过期'", (uid,)
+        ).fetchone()[0]
+        expired_count = conn.execute(
+            "SELECT COUNT(*) FROM items WHERE user_id = ? AND status = '已过期'", (uid,)
+        ).fetchone()[0]
         low_stock_count = conn.execute(
-            "SELECT COUNT(*) FROM items WHERE min_quantity > 0 AND quantity <= min_quantity"
+            """
+            SELECT COUNT(*) FROM items
+            WHERE user_id = ? AND min_quantity > 0 AND quantity <= min_quantity
+            """,
+            (uid,),
         ).fetchone()[0]
 
     return render_template(
@@ -257,16 +407,18 @@ def index():
         expiring_count=expiring_count,
         expired_count=expired_count,
         low_stock_count=low_stock_count,
+        display_name=session.get("display_name", "用户"),
     )
 
 
 @app.route("/generate-code")
+@login_required
 def generate_code():
-    category = request.args.get("category", "其他")
-    return {"code": next_item_code(category)}
+    return {"code": next_item_code(request.args.get("category", "其他"))}
 
 
 @app.route("/add", methods=["GET", "POST"])
+@login_required
 def add_item():
     if request.method == "POST":
         data, error = validate_form(request.form)
@@ -278,15 +430,17 @@ def add_item():
                 conn.execute(
                     """
                     INSERT INTO items (
-                        item_code, name, category, room, location, quantity, min_quantity,
-                        purchase_date, expiry_date, status, notes, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        user_id, item_code, name, category, room, location,
+                        quantity, min_quantity, purchase_date, expiry_date,
+                        status, notes, created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
-                        data["item_code"], data["name"], data["category"], data["room"],
-                        data["location"], data["quantity"], data["min_quantity"],
-                        data["purchase_date"], data["expiry_date"], data["status"],
-                        data["notes"], datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        current_user_id(), data["item_code"], data["name"],
+                        data["category"], data["room"], data["location"],
+                        data["quantity"], data["min_quantity"], data["purchase_date"],
+                        data["expiry_date"], data["status"], data["notes"],
+                        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     ),
                 )
             flash("物品信息已保存。", "success")
@@ -294,14 +448,24 @@ def add_item():
         except sqlite3.IntegrityError:
             flash("物品编号已存在，请更换编号。", "error")
 
-    default_item = {"category": "其他", "item_code": next_item_code("其他"), "quantity": 1, "min_quantity": 0}
+    default_item = {
+        "category": "其他",
+        "item_code": next_item_code("其他"),
+        "quantity": 1,
+        "min_quantity": 0,
+    }
     return render_template("form.html", title="新增物品", item=default_item, categories=CATEGORIES, statuses=STATUSES)
 
 
 @app.route("/edit/<int:item_id>", methods=["GET", "POST"])
+@login_required
 def edit_item(item_id: int):
+    uid = current_user_id()
     with get_connection() as conn:
-        item = conn.execute("SELECT * FROM items WHERE id = ?", (item_id,)).fetchone()
+        item = conn.execute(
+            "SELECT * FROM items WHERE id = ? AND user_id = ?",
+            (item_id, uid),
+        ).fetchone()
     if item is None:
         flash("未找到该物品记录。", "error")
         return redirect(url_for("index"))
@@ -315,15 +479,17 @@ def edit_item(item_id: int):
             with get_connection() as conn:
                 conn.execute(
                     """
-                    UPDATE items SET item_code=?, name=?, category=?, room=?, location=?,
-                        quantity=?, min_quantity=?, purchase_date=?, expiry_date=?, status=?, notes=?
-                    WHERE id=?
+                    UPDATE items SET item_code=?, name=?, category=?, room=?,
+                        location=?, quantity=?, min_quantity=?, purchase_date=?,
+                        expiry_date=?, status=?, notes=?
+                    WHERE id=? AND user_id=?
                     """,
                     (
-                        data["item_code"], data["name"], data["category"], data["room"],
-                        data["location"], data["quantity"], data["min_quantity"],
-                        data["purchase_date"], data["expiry_date"], data["status"],
-                        data["notes"], item_id,
+                        data["item_code"], data["name"], data["category"],
+                        data["room"], data["location"], data["quantity"],
+                        data["min_quantity"], data["purchase_date"],
+                        data["expiry_date"], data["status"], data["notes"],
+                        item_id, uid,
                     ),
                 )
             flash("物品信息已更新。", "success")
@@ -335,35 +501,49 @@ def edit_item(item_id: int):
 
 
 @app.post("/delete/<int:item_id>")
+@login_required
 def delete_item(item_id: int):
+    uid = current_user_id()
     with get_connection() as conn:
-        conn.execute("DELETE FROM shopping_items WHERE source_item_id = ?", (item_id,))
-        conn.execute("DELETE FROM items WHERE id = ?", (item_id,))
+        conn.execute(
+            "DELETE FROM shopping_items WHERE source_item_id = ? AND user_id = ?",
+            (item_id, uid),
+        )
+        conn.execute(
+            "DELETE FROM items WHERE id = ? AND user_id = ?",
+            (item_id, uid),
+        )
     flash("物品记录已删除。", "success")
     return redirect(url_for("index"))
 
 
 @app.route("/reminders")
+@login_required
 def reminders():
     refresh_expiry_statuses()
+    uid = current_user_id()
     with get_connection() as conn:
         expiring = conn.execute(
-            "SELECT * FROM items WHERE status = '即将过期' ORDER BY expiry_date"
+            "SELECT * FROM items WHERE user_id = ? AND status = '即将过期' ORDER BY expiry_date",
+            (uid,),
         ).fetchall()
         expired = conn.execute(
-            "SELECT * FROM items WHERE status = '已过期' ORDER BY expiry_date"
+            "SELECT * FROM items WHERE user_id = ? AND status = '已过期' ORDER BY expiry_date",
+            (uid,),
         ).fetchall()
         low_stock = conn.execute(
             """
             SELECT * FROM items
-            WHERE min_quantity > 0 AND quantity <= min_quantity
+            WHERE user_id = ? AND min_quantity > 0 AND quantity <= min_quantity
             ORDER BY quantity ASC
-            """
+            """,
+            (uid,),
         ).fetchall()
     return render_template("reminders.html", expiring=expiring, expired=expired, low_stock=low_stock)
 
 
 @app.post("/shopping/sync")
+@login_required
 def shopping_sync():
     created = sync_low_stock_to_shopping()
     flash(f"已将 {created} 个低库存物品加入购物清单。", "success")
@@ -371,7 +551,9 @@ def shopping_sync():
 
 
 @app.route("/shopping", methods=["GET", "POST"])
+@login_required
 def shopping_list():
+    uid = current_user_id()
     if request.method == "POST":
         name = request.form.get("name", "").strip()
         try:
@@ -381,76 +563,108 @@ def shopping_list():
         if not name:
             flash("请输入需要购买的物品名称。", "error")
         else:
-            try:
-                with get_connection() as conn:
+            with get_connection() as conn:
+                exists = conn.execute(
+                    """
+                    SELECT id FROM shopping_items
+                    WHERE user_id = ? AND name = ? AND completed = 0
+                    """,
+                    (uid, name),
+                ).fetchone()
+                if exists:
+                    flash("该物品已在未完成的购物清单中。", "error")
+                else:
                     conn.execute(
                         """
-                        INSERT INTO shopping_items (name, quantity, completed, created_at)
-                        VALUES (?, ?, 0, ?)
+                        INSERT INTO shopping_items
+                        (user_id, name, quantity, completed, created_at)
+                        VALUES (?, ?, ?, 0, ?)
                         """,
-                        (name, quantity, datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+                        (uid, name, quantity, datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
                     )
-                flash("已加入购物清单。", "success")
-            except sqlite3.IntegrityError:
-                flash("该物品已在未完成的购物清单中。", "error")
+                    flash("已加入购物清单。", "success")
         return redirect(url_for("shopping_list"))
 
     with get_connection() as conn:
         active = conn.execute(
-            "SELECT * FROM shopping_items WHERE completed = 0 ORDER BY id DESC"
+            "SELECT * FROM shopping_items WHERE user_id = ? AND completed = 0 ORDER BY id DESC",
+            (uid,),
         ).fetchall()
         completed = conn.execute(
-            "SELECT * FROM shopping_items WHERE completed = 1 ORDER BY id DESC LIMIT 20"
+            """
+            SELECT * FROM shopping_items
+            WHERE user_id = ? AND completed = 1
+            ORDER BY id DESC LIMIT 20
+            """,
+            (uid,),
         ).fetchall()
     return render_template("shopping.html", active=active, completed=completed)
 
 
 @app.post("/shopping/toggle/<int:shopping_id>")
+@login_required
 def shopping_toggle(shopping_id: int):
+    uid = current_user_id()
     with get_connection() as conn:
-        row = conn.execute("SELECT completed FROM shopping_items WHERE id = ?", (shopping_id,)).fetchone()
+        row = conn.execute(
+            "SELECT completed FROM shopping_items WHERE id = ? AND user_id = ?",
+            (shopping_id, uid),
+        ).fetchone()
         if row:
             conn.execute(
-                "UPDATE shopping_items SET completed = ? WHERE id = ?",
-                (0 if row["completed"] else 1, shopping_id),
+                "UPDATE shopping_items SET completed = ? WHERE id = ? AND user_id = ?",
+                (0 if row["completed"] else 1, shopping_id, uid),
             )
     return redirect(url_for("shopping_list"))
 
 
 @app.post("/shopping/delete/<int:shopping_id>")
+@login_required
 def shopping_delete(shopping_id: int):
     with get_connection() as conn:
-        conn.execute("DELETE FROM shopping_items WHERE id = ?", (shopping_id,))
+        conn.execute(
+            "DELETE FROM shopping_items WHERE id = ? AND user_id = ?",
+            (shopping_id, current_user_id()),
+        )
     return redirect(url_for("shopping_list"))
 
 
 @app.route("/locations")
+@login_required
 def locations():
     with get_connection() as conn:
         rows = conn.execute(
             """
             SELECT room, location, COUNT(*) AS item_count, SUM(quantity) AS quantity_total
             FROM items
+            WHERE user_id = ?
             GROUP BY room, location
             ORDER BY room, location
-            """
+            """,
+            (current_user_id(),),
         ).fetchall()
     return render_template("locations.html", locations=rows)
 
 
 @app.route("/location")
+@login_required
 def location_detail():
     room = request.args.get("room", "")
     location = request.args.get("location", "")
     with get_connection() as conn:
         items = conn.execute(
-            "SELECT * FROM items WHERE room = ? AND location = ? ORDER BY name",
-            (room, location),
+            """
+            SELECT * FROM items
+            WHERE user_id = ? AND room = ? AND location = ?
+            ORDER BY name
+            """,
+            (current_user_id(), room, location),
         ).fetchall()
     return render_template("location_detail.html", room=room, location=location, items=items)
 
 
 @app.route("/location-qr")
+@login_required
 def location_qr():
     room = request.args.get("room", "")
     location = request.args.get("location", "")
@@ -463,6 +677,7 @@ def location_qr():
 
 
 @app.route("/export")
+@login_required
 def export_csv():
     items = query_items(
         request.args.get("keyword", "").strip(),
