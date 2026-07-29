@@ -10,13 +10,22 @@
 <header class="topbar">
     <div class="container topbar-inner">
         <div>
-            <p class="eyebrow">HOME ORGANIZER</p>
+            <p class="eyebrow">WARM HOME ORGANIZER</p>
             <h1>家庭物品收纳管理系统</h1>
-            <p class="subtitle">分类、编号、登记和查询家中物品</p>
+            <p class="subtitle">分类、编号、提醒、购物与二维码收纳</p>
         </div>
         <a class="button primary" href="{{ url_for('add_item') }}">＋ 新增物品</a>
     </div>
 </header>
+
+<nav class="nav-bar">
+    <div class="container nav-inner">
+        <a class="active" href="{{ url_for('index') }}">物品管理</a>
+        <a href="{{ url_for('reminders') }}">提醒中心</a>
+        <a href="{{ url_for('shopping_list') }}">购物清单</a>
+        <a href="{{ url_for('locations') }}">收纳二维码</a>
+    </div>
+</nav>
 
 <main class="container">
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -25,34 +34,18 @@
         {% endfor %}
     {% endwith %}
 
-    <section class="stats">
-        <article class="stat-card">
-            <span>物品记录数</span>
-            <strong>{{ record_count }}</strong>
-        </article>
-        <article class="stat-card">
-            <span>物品总数量</span>
-            <strong>{{ quantity_total }}</strong>
-        </article>
-        <article class="stat-card">
-            <span>30天内到期</span>
-            <strong>{{ expiring_count }}</strong>
-        </article>
-        <article class="stat-card">
-            <span>已经过期</span>
-            <strong>{{ expired_count }}</strong>
-        </article>
+    <section class="stats five">
+        <article class="stat-card"><span>物品记录数</span><strong>{{ record_count }}</strong></article>
+        <article class="stat-card"><span>物品总数量</span><strong>{{ quantity_total }}</strong></article>
+        <article class="stat-card"><span>30天内到期</span><strong>{{ expiring_count }}</strong></article>
+        <article class="stat-card"><span>已经过期</span><strong>{{ expired_count }}</strong></article>
+        <article class="stat-card"><span>库存不足</span><strong>{{ low_stock_count }}</strong></article>
     </section>
 
     <section class="panel">
         <form class="filters" method="get">
-            <label>
-                <span>关键词</span>
-                <input type="search" name="keyword" value="{{ keyword }}" placeholder="名称、编号、房间或位置">
-            </label>
-
-            <label>
-                <span>类别</span>
+            <label><span>关键词</span><input type="search" name="keyword" value="{{ keyword }}" placeholder="名称、编号、房间或位置"></label>
+            <label><span>类别</span>
                 <select name="category">
                     <option value="全部">全部</option>
                     {% for category in categories %}
@@ -60,9 +53,7 @@
                     {% endfor %}
                 </select>
             </label>
-
-            <label>
-                <span>状态</span>
+            <label><span>状态</span>
                 <select name="status">
                     <option value="全部">全部</option>
                     {% for status in statuses %}
@@ -70,7 +61,6 @@
                     {% endfor %}
                 </select>
             </label>
-
             <div class="filter-actions">
                 <button class="button primary" type="submit">查询</button>
                 <a class="button secondary" href="{{ url_for('index') }}">重置</a>
@@ -80,39 +70,27 @@
     </section>
 
     <section class="panel table-panel">
-        <div class="panel-heading">
-            <div>
-                <h2>物品清单</h2>
-                <p>当前显示 {{ items|length }} 条记录</p>
-            </div>
-        </div>
-
+        <div class="panel-heading"><div><h2>物品清单</h2><p>当前显示 {{ items|length }} 条记录</p></div></div>
         {% if items %}
         <div class="table-wrap">
             <table>
-                <thead>
-                <tr>
-                    <th>编号</th>
-                    <th>名称</th>
-                    <th>类别</th>
-                    <th>存放位置</th>
-                    <th>数量</th>
-                    <th>有效期</th>
-                    <th>状态</th>
-                    <th>操作</th>
-                </tr>
-                </thead>
+                <thead><tr>
+                    <th>编号</th><th>名称</th><th>类别</th><th>存放位置</th>
+                    <th>库存</th><th>有效期</th><th>状态</th><th>操作</th>
+                </tr></thead>
                 <tbody>
                 {% for item in items %}
                 <tr>
                     <td><code>{{ item.item_code }}</code></td>
-                    <td>
-                        <strong>{{ item.name }}</strong>
-                        {% if item.notes %}<small>{{ item.notes }}</small>{% endif %}
-                    </td>
+                    <td><strong>{{ item.name }}</strong>{% if item.notes %}<small>{{ item.notes }}</small>{% endif %}</td>
                     <td>{{ item.category }}</td>
                     <td>{{ item.room }} · {{ item.location }}</td>
-                    <td>{{ item.quantity }}</td>
+                    <td>
+                        {{ item.quantity }}
+                        {% if item.min_quantity > 0 %}
+                        <small>最低 {{ item.min_quantity }}</small>
+                        {% endif %}
+                    </td>
                     <td>{{ item.expiry_date or "—" }}</td>
                     <td><span class="status status-{{ item.status }}">{{ item.status }}</span></td>
                     <td class="actions">
@@ -127,11 +105,7 @@
             </table>
         </div>
         {% else %}
-        <div class="empty">
-            <div class="empty-icon">📦</div>
-            <h3>暂时没有物品记录</h3>
-            <p>点击“新增物品”开始登记家中物品。</p>
-        </div>
+        <div class="empty"><div class="empty-icon">📦</div><h3>暂时没有物品记录</h3><p>点击“新增物品”开始登记。</p></div>
         {% endif %}
     </section>
 </main>

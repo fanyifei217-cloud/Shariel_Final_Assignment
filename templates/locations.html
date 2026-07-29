@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>收纳位置二维码</title><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head>
+<body>
+<header class="topbar compact"><div class="container topbar-inner"><div><p class="eyebrow">LOCATION QR</p><h1>收纳位置二维码</h1><p class="subtitle">打印二维码贴在柜子或收纳箱上</p></div><a class="button secondary" href="{{ url_for('index') }}">返回首页</a></div></header>
+<main class="container">
+    <section class="location-grid">
+    {% for loc in locations %}
+        <article class="panel location-card">
+            <div><p class="eyebrow brown">STORAGE LOCATION</p><h2>{{ loc.room }}</h2><p>{{ loc.location }}</p><small>{{ loc.item_count }} 种物品，共 {{ loc.quantity_total }} 件</small></div>
+            <img src="{{ url_for('location_qr', room=loc.room, location=loc.location) }}" alt="位置二维码">
+            <div class="card-actions"><a class="button secondary" href="{{ url_for('location_detail', room=loc.room, location=loc.location) }}">查看物品</a><a class="button primary" href="{{ url_for('location_qr', room=loc.room, location=loc.location) }}" download>下载二维码</a></div>
+        </article>
+    {% else %}
+        <section class="panel empty"><div class="empty-icon">🏠</div><h3>暂无收纳位置</h3><p>先登记物品及存放位置。</p></section>
+    {% endfor %}
+    </section>
+</main>
+</body>
+</html>
