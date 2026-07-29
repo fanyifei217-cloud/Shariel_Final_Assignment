@@ -175,6 +175,48 @@ def init_database() -> None:
             )
 
 
+
+def ensure_latest_schema() -> None:
+    """Repair columns required by newer versions without deleting existing data."""
+    with get_connection() as conn:
+        item_columns = {
+            row["name"] for row in conn.execute("PRAGMA table_info(items)").fetchall()
+        }
+        if "user_id" not in item_columns:
+            conn.execute("ALTER TABLE items ADD COLUMN user_id INTEGER")
+        if "min_quantity" not in item_columns:
+            conn.execute(
+                "ALTER TABLE items ADD COLUMN min_quantity INTEGER NOT NULL DEFAULT 0"
+            )
+        if "child_name" not in item_columns:
+            conn.execute("ALTER TABLE items ADD COLUMN child_name TEXT")
+
+        user_columns = {
+            row["name"] for row in conn.execute("PRAGMA table_info(users)").fetchall()
+        }
+        if "household_type" not in user_columns:
+            conn.execute(
+                "ALTER TABLE users ADD COLUMN household_type TEXT NOT NULL DEFAULT '独居'"
+            )
+        if "children_count" not in user_columns:
+            conn.execute(
+                "ALTER TABLE users ADD COLUMN children_count INTEGER NOT NULL DEFAULT 0"
+            )
+
+        shopping_columns = {
+            row["name"] for row in conn.execute(
+                "PRAGMA table_info(shopping_items)"
+            ).fetchall()
+        }
+        if "user_id" not in shopping_columns:
+            conn.execute("ALTER TABLE shopping_items ADD COLUMN user_id INTEGER")
+
+
+@app.before_request
+def repair_schema_before_request():
+    ensure_latest_schema()
+
+
 def login_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
@@ -755,47 +797,94 @@ def children_storage():
         flash("儿童收纳页面仅对已婚有子家庭开放。", "error")
         return redirect(url_for("index"))
 
-    labels = child_labels()
-    uid = current_user_id()
-    child_groups = []
+    try:
+        ensure_latest_schema()
 
-    with get_connection() as conn:
-        for label in labels:
-            items = conn.execute(
+        raw_count = session.get("children_count", 0)
+        try:
+            count = max(int(raw_count or 0), 0)
+        except (TypeError, ValueError):
+            count = 0
+
+        if count < 1:
+            with get_connection() as conn:
+                user = conn.execute(
+                    "SELECT children_count FROM users WHERE id = ?",
+                    (current_user_id(),),
+                ).fetchone()
+            if user:
+                try:
+                    count = max(int(user["children_count"] or 0), 0)
+                except (TypeError, ValueError):
+                    count = 0
+
+        # Older accounts may have selected the family type before child count existed.
+        if count < 1:
+            count = 1
+            with get_connection() as conn:
+                conn.execute(
+                    "UPDATE users SET children_count = 1 WHERE id = ?",
+                    (current_user_id(),),
+                )
+            session["children_count"] = 1
+
+        labels = [f"儿童{i}" for i in range(1, count + 1)]
+        uid = current_user_id()
+        child_groups = []
+
+        with get_connection() as conn:
+            for label in labels:
+                rows = conn.execute(
+                    """
+                    SELECT * FROM items
+                    WHERE user_id = ? AND COALESCE(child_name, '') = ?
+                    ORDER BY category, name
+                    """,
+                    (uid, label),
+                ).fetchall()
+
+                quantity_total = 0
+                for row in rows:
+                    try:
+                        quantity_total += int(row["quantity"] or 0)
+                    except (TypeError, ValueError):
+                        pass
+
+                child_groups.append(
+                    {
+                        "name": label,
+                        "items": rows,
+                        "count": len(rows),
+                        "quantity": quantity_total,
+                    }
+                )
+
+            unassigned = conn.execute(
                 """
                 SELECT * FROM items
-                WHERE user_id = ? AND child_name = ?
+                WHERE user_id = ? AND COALESCE(child_name, '') = ''
                 ORDER BY category, name
                 """,
-                (uid, label),
+                (uid,),
             ).fetchall()
-            child_groups.append(
-                {
-                    "name": label,
-                    "items": items,
-                    "count": len(items),
-                    "quantity": sum(item["quantity"] for item in items),
-                }
-            )
 
-        unassigned = conn.execute(
-            """
-            SELECT * FROM items
-            WHERE user_id = ? AND (child_name IS NULL OR child_name = '')
-            ORDER BY category, name
-            """,
-            (uid,),
-        ).fetchall()
-
-    try:
         return render_template(
             "children.html",
             child_groups=child_groups,
             unassigned=unassigned,
-            children_count=len(labels),
+            children_count=count,
         )
+
     except TemplateNotFound:
-        flash("儿童收纳页面文件缺失，请重新上传 templates/children.html。", "error")
+        flash("缺少 templates/children.html，请把该文件上传到 templates 文件夹。", "error")
+        return redirect(url_for("index"))
+    except sqlite3.Error as exc:
+        app.logger.exception("儿童收纳数据库错误: %s", exc)
+        flash("儿童收纳数据正在初始化，请刷新后重试。", "error")
+        return redirect(url_for("index"))
+    except Exception as exc:
+        app.logger.exception("儿童收纳页面错误: %s", exc)
+        flash("儿童收纳页面发生错误，请稍后重试。", "error")
         return redirect(url_for("index"))
 
 
@@ -880,6 +969,27 @@ def export_csv():
 def internal_error(error):
     app.logger.exception("Internal server error: %s", error)
     return render_template("500.html"), 500
+
+
+@app.route("/diagnostic")
+@login_required
+def diagnostic():
+    ensure_latest_schema()
+    with get_connection() as conn:
+        item_columns = [
+            row["name"] for row in conn.execute("PRAGMA table_info(items)").fetchall()
+        ]
+        user_columns = [
+            row["name"] for row in conn.execute("PRAGMA table_info(users)").fetchall()
+        ]
+    return {
+        "status": "ok",
+        "user_id": current_user_id(),
+        "household_type": session.get("household_type"),
+        "children_count": session.get("children_count"),
+        "items_columns": item_columns,
+        "users_columns": user_columns,
+    }
 
 
 @app.route("/health")
