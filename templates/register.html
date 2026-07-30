@@ -71,6 +71,16 @@
                 <small class="privacy-note">此信息仅用于个性化页面展示，不会用于其他用途。</small>
             </label>
 
+            <label id="partner-gender-field">
+                <span>伴侣性别</span>
+                <select name="partner_gender" id="partner-gender">
+                    <option value="未设置">请选择非独居的居住成员情况</option>
+                    <option value="男">男</option>
+                    <option value="女">女</option>
+                </select>
+                <small class="privacy-note" id="partner-gender-note">选择情侣、已婚无子或已婚有子后，可选择伴侣性别。</small>
+            </label>
+
             <label id="children-count-field" class="hidden-field">
                 <span>儿童数量</span>
                 <input type="number" name="children_count" id="children-count" min="1" value="1" placeholder="请输入儿童数量">
@@ -141,10 +151,25 @@ function updateRegisterType() {
 typeRadios.forEach(radio => radio.addEventListener("change", updateRegisterType));
 
 const householdType = document.getElementById("household-type");
+const partnerGenderField = document.getElementById("partner-gender-field");
+const partnerGender = document.getElementById("partner-gender");
+const partnerGenderNote = document.getElementById("partner-gender-note");
 const childrenField = document.getElementById("children-count-field");
 const childrenInput = document.getElementById("children-count");
 
 function updateChildrenField() {
+    const hasPartner = householdType.value !== "独居";
+    partnerGender.required = hasPartner;
+    partnerGender.disabled = !hasPartner;
+    partnerGenderNote.textContent = hasPartner
+        ? "请选择伴侣性别。"
+        : "选择情侣、已婚无子或已婚有子后，可选择伴侣性别。";
+    if (!hasPartner) {
+        partnerGender.value = "未设置";
+    } else if (partnerGender.value === "未设置") {
+        partnerGender.value = "男";
+    }
+
     const hasChildren = householdType.value === "已婚有子（三人及以上）";
     childrenField.classList.toggle("hidden-field", !hasChildren);
     childrenInput.required = hasChildren;
