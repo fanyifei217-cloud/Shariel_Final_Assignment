@@ -2011,3 +2011,145 @@ body.gender-page-male .warm-select-option.selected {
     background: var(--male-primary) !important;
     color: #fff !important;
 }
+
+/* ===== 男性账号：绿色主题二次融合（更柔和、更统一） ===== */
+body.gender-page-male {
+    --male-bg: #f1f5ee;
+    --male-surface: #fbfcf9;
+    --male-surface-soft: #f5f8f2;
+    --male-header: #e3ece0;
+    --male-header-2: #d8e5d4;
+    --male-border: #d3dfcf;
+    --male-line: #e0e8dd;
+    --male-primary: #789573;
+    --male-primary-dark: #607d5c;
+    --male-text: #3d4e3a;
+    --male-muted: #788476;
+    background: linear-gradient(180deg, #edf3ea 0%, #f5f7f2 42%, #f1f5ee 100%) !important;
+}
+
+body.gender-page-male .topbar,
+body.gender-page-male .topbar.compact,
+body.gender-page-male .page-header,
+body.gender-page-male .hero,
+body.gender-page-male .section-header,
+body.gender-page-male .children-hero,
+body.gender-page-male .children-overview,
+body.gender-page-male .personalized-home {
+    background: linear-gradient(135deg, #e5eee2 0%, #dce8d8 100%) !important;
+    border-color: #d0ddcc !important;
+    box-shadow: 0 6px 18px rgba(67, 89, 63, .05) !important;
+}
+
+body.gender-page-male .panel,
+body.gender-page-male .card,
+body.gender-page-male .form-card,
+body.gender-page-male .content-card,
+body.gender-page-male .settings-card,
+body.gender-page-male .child-card,
+body.gender-page-male .location-card,
+body.gender-page-male .reminder-card,
+body.gender-page-male .shopping-card,
+body.gender-page-male .table-panel,
+body.gender-page-male .form-panel,
+body.gender-page-male .filters,
+body.gender-page-male .nav-bar,
+body.gender-page-male .quick-form,
+body.gender-page-male .box,
+body.gender-page-male .empty,
+body.gender-page-male .modal-content,
+body.gender-page-male .stat-card,
+body.gender-page-male .children-settings,
+body.gender-page-male .children-summary,
+body.gender-page-male .unassigned-panel {
+    background: rgba(251, 252, 249, .97) !important;
+    border-color: #d7e1d3 !important;
+    box-shadow: 0 10px 24px rgba(65, 84, 61, .06) !important;
+}
+
+body.gender-page-male .panel-heading,
+body.gender-page-male .card-header,
+body.gender-page-male .table-panel thead,
+body.gender-page-male thead,
+body.gender-page-male th {
+    background: #f0f5ed !important;
+    border-color: #dfe8dc !important;
+    color: #486046 !important;
+}
+
+body.gender-page-male .panel-heading {
+    background: transparent !important;
+}
+
+body.gender-page-male input,
+body.gender-page-male textarea,
+body.gender-page-male select,
+body.gender-page-male .warm-select-button,
+body.gender-page-male .warm-select-trigger {
+    background: #fdfefc !important;
+    border-color: #d0ddcc !important;
+}
+
+body.gender-page-male .button.primary,
+body.gender-page-male button.primary,
+body.gender-page-male .check-button,
+body.gender-page-male .auth-submit {
+    background: #789573 !important;
+    border-color: #789573 !important;
+    box-shadow: 0 6px 14px rgba(89, 117, 84, .12) !important;
+}
+
+body.gender-page-male .button.secondary,
+body.gender-page-male button.secondary,
+body.gender-page-male .mini-button,
+body.gender-page-male .register-tab,
+body.gender-page-male .topbar .button {
+    background: #f2f6f0 !important;
+    border-color: #d6e1d2 !important;
+    color: #587054 !important;
+}
+
+body.gender-page-male .status,
+body.gender-page-male .status-badge,
+body.gender-page-male .household-badge,
+body.gender-page-male .category,
+body.gender-page-male .badge,
+body.gender-page-male .pill,
+body.gender-page-male .eyebrow,
+body.gender-page-male .tag {
+    background: #edf3ea !important;
+    border-color: #d6e1d2 !important;
+    color: #587054 !important;
+}
+
+body.gender-page-male tbody tr:nth-child(even) {
+    background: #f8faf6 !important;
+}
+
+body.gender-page-male tbody tr:hover {
+    background: #f0f5ed !important;
+}
+
+body.gender-page-male .privacy-note,
+body.gender-page-male .login-note,
+body.gender-page-male .personalized-tips,
+body.gender-page-male .flash {
+    background: #f1f6ef !important;
+    border-color: #d9e3d5 !important;
+    color: #5f735b !important;
+}
+
+body.gender-page-male .warm-select-menu {
+    background: #fcfdfb !important;
+    border-color: #d0ddcc !important;
+    box-shadow: 0 12px 26px rgba(65, 84, 61, .11) !important;
+}
+
+body.gender-page-male .warm-select-option:hover,
+body.gender-page-male .warm-select-option.focused {
+    background: #eef4eb !important;
+}
+
+body.gender-page-male .warm-select-option.selected {
+    background: #789573 !important;
+}
