@@ -28,6 +28,10 @@
         function sync() {
             const selectedOption = select.options[select.selectedIndex] || select.options[0];
             button.textContent = selectedOption ? selectedOption.textContent : "请选择";
+            button.disabled = select.disabled;
+            button.setAttribute("aria-disabled", String(select.disabled));
+            wrapper.classList.toggle("disabled", select.disabled);
+            if (select.disabled) closeMenu();
             [...menu.children].forEach((item, index) => {
                 const isSelected = index === select.selectedIndex;
                 item.classList.toggle("selected", isSelected);
@@ -44,6 +48,7 @@
         }
 
         function openMenu() {
+            if (select.disabled) return;
             document.querySelectorAll(".warm-select.open").forEach(other => {
                 if (other !== wrapper) {
                     other.classList.remove("open");
@@ -85,6 +90,7 @@
         });
 
         button.addEventListener("click", () => {
+            if (select.disabled) return;
             menu.hidden ? openMenu() : closeMenu();
         });
 
@@ -114,4 +120,23 @@
     document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll("select").forEach(buildWarmSelect);
     });
+})();
+
+// 记住首页识别出的个性化主题，并在进入其他功能页面后继续使用。
+(() => {
+    const body = document.body;
+    if (!body) return;
+
+    if (body.classList.contains("gender-page-male")) {
+        localStorage.setItem("familyStorageTheme", "male");
+    } else if (body.classList.contains("gender-page-female")) {
+        localStorage.setItem("familyStorageTheme", "female");
+    } else if (body.classList.contains("gender-page-neutral")) {
+        localStorage.setItem("familyStorageTheme", "neutral");
+    } else {
+        const savedTheme = localStorage.getItem("familyStorageTheme");
+        if (savedTheme === "male") body.classList.add("gender-page-male");
+        if (savedTheme === "female") body.classList.add("gender-page-female");
+        if (savedTheme === "neutral") body.classList.add("gender-page-neutral");
+    }
 })();

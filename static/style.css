@@ -1478,3 +1478,70 @@ body.gender-page-male .recommended-categories a {
     border-color: #b9cfb3;
     color: #46663f;
 }
+
+/* 男性账号进入任何功能页面后，继续保持完整绿色主题 */
+body.gender-page-male main,
+body.gender-page-male .page-shell,
+body.gender-page-male .content-area,
+body.gender-page-male .main-content {
+    background: transparent;
+}
+
+body.gender-page-male .panel,
+body.gender-page-male .card,
+body.gender-page-male .form-card,
+body.gender-page-male .content-card,
+body.gender-page-male .settings-card,
+body.gender-page-male .child-card,
+body.gender-page-male .location-card,
+body.gender-page-male .reminder-card,
+body.gender-page-male .shopping-card,
+body.gender-page-male .empty,
+body.gender-page-male .modal-content {
+    background: #f4faf2 !important;
+    border-color: #c2d6bc !important;
+    box-shadow: 0 14px 34px rgba(69, 101, 61, 0.12) !important;
+}
+
+body.gender-page-male .page-header,
+body.gender-page-male .hero,
+body.gender-page-male .section-header,
+body.gender-page-male .children-hero {
+    background: linear-gradient(135deg, #dbead6 0%, #bdd5b6 100%) !important;
+    border-color: #adc8a5 !important;
+}
+
+body.gender-page-male a,
+body.gender-page-male .text-link {
+    color: #4e7247;
+}
+
+body.gender-page-male .danger-link {
+    color: #8b554d;
+}
+
+body.gender-page-male code,
+body.gender-page-male .tag,
+body.gender-page-male .badge,
+body.gender-page-male .pill {
+    background: #dcebd7 !important;
+    color: #45683f !important;
+    border-color: #bdd2b7 !important;
+}
+
+body.gender-page-male hr,
+body.gender-page-male .divider,
+body.gender-page-male .panel-heading,
+body.gender-page-male .form-section {
+    border-color: #cfdfca !important;
+}
+
+body.gender-page-male input[type="checkbox"],
+body.gender-page-male input[type="radio"] {
+    accent-color: #6f9366;
+}
+
+body.gender-page-male ::selection {
+    background: #b9d2b1;
+    color: #294126;
+}
