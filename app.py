@@ -84,6 +84,32 @@ HOUSEHOLD_PERSONALIZATION = {
     },
 }
 
+
+
+GENDER_PERSONALIZATION = {
+    "男": {
+        "label": "清爽实用模式",
+        "greeting": "让常用物品更快找到、更好管理",
+        "description": "界面采用自然绿色调，优先突出高频用品、工具、电子产品和证件资料。",
+        "accent_class": "gender-male",
+        "focus_categories": ["电子产品", "工具", "证件资料", "清洁用品"],
+    },
+    "女": {
+        "label": "温馨细致模式",
+        "greeting": "让每一处收纳都清楚又舒适",
+        "description": "界面采用柔和暖杏色调，优先突出衣物、书籍、药品和日常生活用品。",
+        "accent_class": "gender-female",
+        "focus_categories": ["衣物", "书籍", "药品", "厨房用品"],
+    },
+    "未设置": {
+        "label": "温馨通用模式",
+        "greeting": "把家里的物品安排得井井有条",
+        "description": "根据家庭成员情况展示适合你的收纳建议。",
+        "accent_class": "gender-neutral",
+        "focus_categories": ["食品", "药品", "清洁用品", "证件资料"],
+    },
+}
+
 PHONE_PATTERN = re.compile(r"^1[3-9]\d{9}$")
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
@@ -106,6 +132,7 @@ def init_database() -> None:
                 email TEXT UNIQUE,
                 household_type TEXT NOT NULL DEFAULT '独居',
                 gender TEXT NOT NULL DEFAULT '未设置',
+                partner_gender TEXT NOT NULL DEFAULT '未设置',
                 children_count INTEGER NOT NULL DEFAULT 0,
                 child_names TEXT NOT NULL DEFAULT '[]',
                 child_profiles TEXT NOT NULL DEFAULT '[]',
@@ -143,6 +170,8 @@ def init_database() -> None:
         user_columns = {row["name"] for row in conn.execute("PRAGMA table_info(users)")}
         if "gender" not in user_columns:
             conn.execute("ALTER TABLE users ADD COLUMN gender TEXT NOT NULL DEFAULT '未设置'")
+        if "partner_gender" not in user_columns:
+            conn.execute("ALTER TABLE users ADD COLUMN partner_gender TEXT NOT NULL DEFAULT '未设置'")
 
         columns = {row["name"] for row in conn.execute("PRAGMA table_info(items)")}
         if "user_id" not in columns:
@@ -433,6 +462,7 @@ def register():
         account = request.form.get("account", "").strip().lower()
         household_type = request.form.get("household_type", "独居").strip()
         gender = request.form.get("gender", "未设置").strip()
+        partner_gender = request.form.get("partner_gender", "未设置").strip()
         children_count_raw = request.form.get("children_count", "0").strip()
         password = request.form.get("password", "")
         confirm_password = request.form.get("confirm_password", "")
@@ -446,6 +476,7 @@ def register():
             "已婚有子（三人及以上）",
         }
         allowed_genders = {"未设置", "男", "女"}
+        allowed_partner_genders = {"未设置", "男", "女"}
 
         try:
             children_count = int(children_count_raw or 0)
@@ -460,6 +491,12 @@ def register():
             flash("请选择正确的性别。", "error")
         elif household_type not in allowed_household_types:
             flash("请选择正确的居住成员情况。", "error")
+        elif household_type != "独居" and partner_gender not in {"男", "女"}:
+            flash("请选择伴侣性别。", "error")
+        elif household_type == "独居":
+            partner_gender = "未设置"
+        elif partner_gender not in allowed_partner_genders:
+            flash("请选择正确的伴侣性别。", "error")
         elif children_count < 0:
             flash("儿童数量必须是大于或等于0的整数。", "error")
         elif household_type == "已婚有子（三人及以上）" and children_count < 1:
@@ -485,8 +522,8 @@ def register():
                     cursor = conn.execute(
                         """
                         INSERT INTO users
-                        (display_name, phone, email, household_type, gender, children_count, child_names, password_hash, created_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        (display_name, phone, email, household_type, gender, partner_gender, children_count, child_names, password_hash, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                         (
                             display_name,
@@ -494,6 +531,7 @@ def register():
                             email,
                             household_type,
                             gender,
+                            partner_gender,
                             children_count,
                             json.dumps([f"儿童{i}" for i in range(1, children_count + 1)], ensure_ascii=False),
                             generate_password_hash(password),
@@ -504,6 +542,8 @@ def register():
                 session["user_id"] = user_id
                 session["display_name"] = display_name
                 session["household_type"] = household_type
+                session["gender"] = gender
+                session["partner_gender"] = partner_gender
                 session["children_count"] = children_count
                 session["child_names"] = [f"儿童{i}" for i in range(1, children_count + 1)]
                 flash("注册成功，欢迎使用家庭物品收纳管理系统。", "success")
@@ -536,6 +576,8 @@ def login():
             session["user_id"] = user["id"]
             session["display_name"] = user["display_name"]
             session["household_type"] = user["household_type"]
+            session["gender"] = user["gender"] if "gender" in user.keys() else "未设置"
+            session["partner_gender"] = user["partner_gender"] if "partner_gender" in user.keys() else "未设置"
             session["children_count"] = user["children_count"]
             try:
                 session["child_names"] = json.loads(user["child_names"] or "[]")
@@ -589,6 +631,10 @@ def index():
 
     household_type = session.get("household_type", "独居")
     children_count = int(session.get("children_count", 0))
+    gender = session.get("gender", "未设置")
+    gender_personalization = GENDER_PERSONALIZATION.get(
+        gender, GENDER_PERSONALIZATION["未设置"]
+    )
     personalization = HOUSEHOLD_PERSONALIZATION.get(
         household_type,
         HOUSEHOLD_PERSONALIZATION["独居"],
@@ -611,6 +657,8 @@ def index():
         household_type=household_type,
         children_count=children_count,
         personalization=personalization,
+        gender=gender,
+        gender_personalization=gender_personalization,
     )
 
 
