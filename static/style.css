@@ -522,6 +522,9 @@ label small {
     color: var(--primary-dark);
 }
 @media (max-width: 900px) {
+    .auth-visual h1 {
+        white-space: normal;
+    }
     .stats.five {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -575,9 +578,11 @@ label small {
     padding: 34px;
 }
 .auth-visual h1 {
-    margin: 12px 0 18px;
-    font-size: clamp(36px, 5vw, 62px);
-    line-height: 1.12;
+    margin: 0 0 28px;
+    font-size: clamp(30px, 3.6vw, 48px);
+    line-height: 1.3;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
     color: var(--text);
 }
 .auth-visual > p:not(.eyebrow) {
@@ -1263,4 +1268,71 @@ select.warm-select-native {
     transform: translateY(-50%);
     font-size: 17px;
     font-weight: 800;
+}
+
+
+/* 儿童性别与特殊备注 */
+.child-profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.child-profile-box {
+    margin: 0;
+    padding: 20px;
+    border: 1px solid #ead7c6;
+    border-radius: 18px;
+    background: #fffaf5;
+}
+
+.child-profile-box legend {
+    padding: 0 10px;
+    color: var(--primary-dark);
+    font-weight: 800;
+}
+
+.child-profile-box label {
+    display: block;
+    margin-bottom: 16px;
+}
+
+.child-profile-box label:last-child {
+    margin-bottom: 0;
+}
+
+.child-profile-box label > span {
+    display: block;
+    margin-bottom: 8px;
+    color: #8c664e;
+    font-weight: 700;
+}
+
+.child-profile-box input,
+.child-profile-box select,
+.child-profile-box textarea {
+    width: 100%;
+}
+
+.child-profile-box textarea {
+    min-height: 96px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.child-card-note {
+    max-width: 520px;
+    margin-top: 8px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: #f7eadf;
+    color: #765744;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+    .child-profile-grid {
+        grid-template-columns: 1fr;
+    }
 }
