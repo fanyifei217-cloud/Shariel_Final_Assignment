@@ -2153,3 +2153,46 @@ body.gender-page-male .warm-select-option.focused {
 body.gender-page-male .warm-select-option.selected {
     background: #789573 !important;
 }
+
+/* 修复男性购物清单顶部输入区域的重复边框 */
+body.gender-page-male .shopping-card .quick-form,
+body.gender-page-male main .panel .quick-form,
+body.gender-page-male .quick-form {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+}
+
+body.gender-page-male .quick-form input,
+body.gender-page-male .quick-form .button {
+    margin: 0 !important;
+}
+
+/* 修复男性新增/编辑物品页顶部标题区域色块，使颜色自然融合 */
+body.gender-page-male .topbar,
+body.gender-page-male .topbar.compact {
+    background: linear-gradient(135deg, #e5eee2 0%, #dce8d8 100%) !important;
+    border-bottom: 1px solid #d0ddcc !important;
+}
+
+body.gender-page-male .topbar > .container,
+body.gender-page-male .topbar .topbar-inner,
+body.gender-page-male .topbar .container,
+body.gender-page-male .topbar-inner {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+body.gender-page-male .topbar h1,
+body.gender-page-male .topbar .eyebrow {
+    color: #425b3f !important;
+}
+
+body.gender-page-male .topbar .subtitle {
+    color: #748270 !important;
+    opacity: 1 !important;
+}
