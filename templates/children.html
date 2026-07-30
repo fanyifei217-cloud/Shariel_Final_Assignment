@@ -41,17 +41,32 @@
             </div>
         </div>
         <form method="post" class="child-name-form">
-            <input type="hidden" name="action" value="save_names">
-            <div class="child-name-grid">
+            <input type="hidden" name="action" value="save_profiles">
+            <div class="child-profile-grid">
                 {% for group in child_groups %}
-                <label>
-                    <span>儿童 {{ loop.index }} 昵称</span>
-                    <input type="text" name="child_name" value="{{ group.name }}" maxlength="20" required>
-                </label>
+                <fieldset class="child-profile-box">
+                    <legend>儿童 {{ loop.index }} 资料</legend>
+                    <label>
+                        <span>昵称</span>
+                        <input type="text" name="child_name" value="{{ group.name }}" maxlength="20" required>
+                    </label>
+                    <label>
+                        <span>性别</span>
+                        <select name="child_gender">
+                            {% for option in ['未设置', '男孩', '女孩', '其他'] %}
+                            <option value="{{ option }}" {% if group.gender == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label class="child-notes-field">
+                        <span>特殊备注</span>
+                        <textarea name="child_notes" maxlength="300" rows="3" placeholder="例如：过敏情况、常用尺码、收纳习惯等">{{ group.notes }}</textarea>
+                    </label>
+                </fieldset>
                 {% endfor %}
             </div>
             <div class="children-setting-actions">
-                <button class="button primary" type="submit">保存昵称</button>
+                <button class="button primary" type="submit">保存儿童资料</button>
             </div>
         </form>
         <div class="children-count-actions">
@@ -75,7 +90,8 @@
                 <div>
                     <p class="eyebrow brown">CHILD {{ loop.index }}</p>
                     <h2>{{ group.name }}</h2>
-                    <p>{{ group.count }} 种物品，共 {{ group.quantity }} 件</p>
+                    <p>{{ group.gender }} · {{ group.count }} 种物品，共 {{ group.quantity }} 件</p>
+                    {% if group.notes %}<p class="child-card-note">备注：{{ group.notes }}</p>{% endif %}
                 </div>
                 <a class="button primary" href="{{ url_for('add_item', child=group.name) }}">＋ 添加物品</a>
             </div>
