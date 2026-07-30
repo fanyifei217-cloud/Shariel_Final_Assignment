@@ -1336,3 +1336,28 @@ select.warm-select-native {
         grid-template-columns: 1fr;
     }
 }
+
+
+/* 登录页：恢复右侧信息输入框的正常宽度 */
+@media (min-width: 821px) {
+    .auth-shell {
+        width: min(1480px, calc(100% - 48px));
+        grid-template-columns: minmax(0, 1fr) minmax(440px, 520px);
+        gap: 64px;
+    }
+
+    .auth-card {
+        width: 100%;
+        max-width: 520px;
+        justify-self: end;
+        box-sizing: border-box;
+    }
+
+    .auth-form input,
+    .auth-form select,
+    .auth-form textarea,
+    .auth-submit {
+        width: 100%;
+        box-sizing: border-box;
+    }
+}
