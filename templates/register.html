@@ -159,16 +159,21 @@ const childrenInput = document.getElementById("children-count");
 
 function updateChildrenField() {
     const hasPartner = householdType.value !== "独居";
+
     partnerGender.required = hasPartner;
     partnerGender.disabled = !hasPartner;
-    partnerGenderNote.textContent = hasPartner
-        ? "请选择伴侣性别。"
-        : "选择情侣、已婚无子或已婚有子后，可选择伴侣性别。";
     if (!hasPartner) {
         partnerGender.value = "未设置";
     } else if (partnerGender.value === "未设置") {
         partnerGender.value = "男";
     }
+    partnerGenderNote.textContent = hasPartner
+        ? "请选择伴侣性别。"
+        : "选择情侣、已婚无子或已婚有子后，可选择伴侣性别。";
+
+    // 在状态和值都更新后再刷新暖色选择框，避免按钮仍保持禁用。
+    partnerGender.dispatchEvent(new Event("change", { bubbles: true }));
+    partnerGender.dispatchEvent(new Event("warm-select-refresh"));
 
     const hasChildren = householdType.value === "已婚有子（三人及以上）";
     childrenField.classList.toggle("hidden-field", !hasChildren);
