@@ -110,6 +110,12 @@
         });
 
         select.addEventListener("change", sync);
+        select.addEventListener("warm-select-refresh", sync);
+
+        // 监听 disabled 属性变化，保证“独居/非独居”切换后自定义按钮立即同步。
+        const disabledObserver = new MutationObserver(sync);
+        disabledObserver.observe(select, { attributes: true, attributeFilter: ["disabled"] });
+
         document.addEventListener("click", event => {
             if (!wrapper.contains(event.target)) closeMenu();
         });
