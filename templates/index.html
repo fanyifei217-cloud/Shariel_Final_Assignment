@@ -41,17 +41,21 @@
         {% endfor %}
     {% endwith %}
 
-    <section class="personalized-home {{ personalization.accent_class }}">
+    <section class="personalized-home {{ personalization.accent_class }} {{ gender_personalization.accent_class }}">
         <div class="personalized-copy">
-            <span class="household-badge">{{ personalization.badge }}</span>
+            <div class="personalization-badges">
+                <span class="household-badge">{{ personalization.badge }}</span>
+                <span class="gender-badge">{{ gender_personalization.label }}</span>
+            </div>
             <p class="household-type">
                 当前居住情况：{{ household_type }}
                 {% if household_type == "已婚有子（三人及以上）" %}
                 · 儿童 {{ children_count }} 名
                 {% endif %}
             </p>
-            <h2>{{ personalization.title }}</h2>
-            <p>{{ personalization.subtitle }}</p>
+            <h2>{{ gender_personalization.greeting }}</h2>
+            <p>{{ gender_personalization.description }}</p>
+            <p class="household-personalization-note">{{ personalization.title }}：{{ personalization.subtitle }}</p>
         </div>
 
         <div class="personalized-tips">
@@ -74,8 +78,8 @@
         {% endif %}
 
         <div class="recommended-categories">
-            <span>建议优先管理：</span>
-            {% for category in personalization.recommended_categories %}
+            <span>根据你的个性化设置，建议优先管理：</span>
+            {% for category in gender_personalization.focus_categories %}
             <a href="{{ url_for('index', category=category) }}">{{ category }}</a>
             {% endfor %}
         </div>
