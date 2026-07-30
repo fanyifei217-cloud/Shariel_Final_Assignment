@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>登录｜家庭物品收纳管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="auth-body">
+<main class="auth-shell">
+    <section class="auth-visual">
+        <p class="eyebrow brown">WARM HOME ORGANIZER</p>
+        <h1>把家里的每一件物品<br>都放在清楚的位置</h1>
+        <p>分类、编号、提醒、购物清单与收纳二维码，让家庭整理更轻松。</p>
+        <div class="home-scene plant-scene" aria-hidden="true">
+            <svg class="large-plant-illustration" viewBox="0 0 520 330" role="img" aria-label="绿色植物插画">
+                <ellipse cx="260" cy="306" rx="142" ry="18" fill="#d9c4af" opacity="0.42"/>
+                <path d="M260 250 C252 192 250 134 262 72" fill="none" stroke="#5f7f4f" stroke-width="10" stroke-linecap="round"/>
+                <path d="M258 196 C214 170 183 137 168 99" fill="none" stroke="#6f915d" stroke-width="8" stroke-linecap="round"/>
+                <path d="M260 170 C305 145 337 111 350 73" fill="none" stroke="#6f915d" stroke-width="8" stroke-linecap="round"/>
+                <path d="M259 129 C220 111 198 83 190 54" fill="none" stroke="#6f915d" stroke-width="7" stroke-linecap="round"/>
+                <path d="M261 111 C299 94 323 66 331 38" fill="none" stroke="#6f915d" stroke-width="7" stroke-linecap="round"/>
+                <ellipse cx="157" cy="82" rx="60" ry="31" transform="rotate(28 157 82)" fill="#7ca864"/>
+                <ellipse cx="363" cy="62" rx="62" ry="31" transform="rotate(-30 363 62)" fill="#6f9c57"/>
+                <ellipse cx="206" cy="48" rx="52" ry="27" transform="rotate(42 206 48)" fill="#91b878"/>
+                <ellipse cx="330" cy="112" rx="64" ry="32" transform="rotate(-28 330 112)" fill="#84ad69"/>
+                <ellipse cx="187" cy="143" rx="65" ry="32" transform="rotate(28 187 143)" fill="#6f9a57"/>
+                <ellipse cx="293" cy="63" rx="55" ry="28" transform="rotate(-12 293 63)" fill="#97bd7d"/>
+                <ellipse cx="258" cy="92" rx="43" ry="23" transform="rotate(86 258 92)" fill="#7eaa65"/>
+                <path d="M174 236 H346 L328 304 H192 Z" fill="#bd8e6d"/>
+                <path d="M164 226 C164 213 176 204 190 204 H330 C344 204 356 213 356 226 V241 H164 Z" fill="#d7a27b"/>
+                <path d="M201 258 H319" stroke="#a67658" stroke-width="8" stroke-linecap="round" opacity="0.55"/>
+            </svg>
+        </div>
+    </section>
+
+    <section class="auth-card">
+        <div class="auth-heading">
+            <p class="eyebrow brown">WELCOME BACK</p>
+            <h2>登录系统</h2>
+            <p>可使用手机号或邮箱登录</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <form method="post" class="auth-form">
+            <label>
+                <span>手机号或邮箱</span>
+                <input name="account" required autocomplete="username" placeholder="请输入手机号或邮箱">
+            </label>
+            <label>
+                <span>密码</span>
+                <input type="password" name="password" required autocomplete="current-password" placeholder="请输入密码">
+            </label>
+            <button class="button primary auth-submit" type="submit">登录</button>
+        </form>
+
+        <p class="auth-switch">还没有账号？<a href="{{ url_for('register') }}">立即注册</a></p>
+    </section>
+</main>
+</body>
+</html>

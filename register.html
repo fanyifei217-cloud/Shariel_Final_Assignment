@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>注册｜家庭物品收纳管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="auth-body">
+<main class="auth-shell">
+    <section class="auth-visual">
+        <p class="eyebrow brown">CREATE YOUR HOME</p>
+        <h1>建立属于你的<br>家庭收纳档案</h1>
+        <p>可以选择手机号注册或邮箱注册，每位用户只能查看和管理自己的家庭物品数据。</p>
+        <div class="home-scene house-scene" aria-hidden="true">
+            <svg class="large-house-illustration" viewBox="0 0 560 360" role="img" aria-label="温馨大房子插画">
+                <ellipse cx="280" cy="326" rx="200" ry="20" fill="#d9c4af" opacity="0.40"/>
+                <path d="M92 174 L280 44 L468 174" fill="#c97b5f" stroke="#9f604b" stroke-width="12" stroke-linejoin="round"/>
+                <path d="M126 163 H434 V316 H126 Z" fill="#f1dfc7" stroke="#c49d7f" stroke-width="8"/>
+                <path d="M102 173 L280 48 L458 173" fill="none" stroke="#6f4a39" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+                <rect x="156" y="201" width="90" height="78" rx="8" fill="#b9d8d7" stroke="#9c765e" stroke-width="7"/>
+                <line x1="201" y1="201" x2="201" y2="279" stroke="#ffffff" stroke-width="6" opacity="0.8"/>
+                <line x1="156" y1="240" x2="246" y2="240" stroke="#ffffff" stroke-width="6" opacity="0.8"/>
+                <rect x="314" y="190" width="76" height="126" rx="7" fill="#a86f4d" stroke="#76503d" stroke-width="7"/>
+                <circle cx="373" cy="255" r="6" fill="#f4d78d"/>
+                <rect x="304" y="308" width="98" height="12" rx="6" fill="#8e765f"/>
+                <rect x="416" y="103" width="34" height="78" rx="4" fill="#b7654f" stroke="#8f4d3f" stroke-width="6"/>
+                <path d="M116 315 C90 306 85 282 100 264 C116 244 149 252 153 276 C170 267 194 276 198 297 C201 312 187 320 170 320 Z" fill="#7fa35f"/>
+                <path d="M430 315 C406 305 405 282 421 266 C438 248 468 256 470 279 C486 270 509 281 511 300 C513 314 500 321 482 321 Z" fill="#6f9853"/>
+                <path d="M140 316 H420" stroke="#b4977f" stroke-width="8" stroke-linecap="round" opacity="0.45"/>
+            </svg>
+        </div>
+    </section>
+
+    <section class="auth-card">
+        <div class="auth-heading">
+            <p class="eyebrow brown">NEW ACCOUNT</p>
+            <h2>注册账号</h2>
+            <p>请选择手机号或邮箱完成注册</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <form method="post" class="auth-form">
+            <label>
+                <span>昵称</span>
+                <input name="display_name" required autocomplete="name" placeholder="例如：Shariel的家">
+            </label>
+
+
+            <label>
+                <span>居住成员情况</span>
+                <select name="household_type" id="household-type" required>
+                    <option value="独居">独居</option>
+                    <option value="情侣或已婚无子（两人）">情侣或已婚无子（两人）</option>
+                    <option value="已婚有子（三人及以上）">已婚有子（三人及以上）</option>
+                </select>
+                <small class="privacy-note">此信息仅用于个性化页面展示，不会用于其他用途。</small>
+            </label>
+
+            <label id="children-count-field" class="hidden-field">
+                <span>儿童数量</span>
+                <input type="number" name="children_count" id="children-count" min="1" value="1" placeholder="请输入儿童数量">
+                <small class="privacy-note">用于生成更符合家庭人数的收纳建议。</small>
+            </label>
+
+            <div class="register-tabs">
+                <label class="register-tab active">
+                    <input type="radio" name="register_type" value="phone" checked>
+                    <span>手机号注册</span>
+                </label>
+                <label class="register-tab">
+                    <input type="radio" name="register_type" value="email">
+                    <span>邮箱注册</span>
+                </label>
+            </div>
+
+            <label>
+                <span id="account-label">手机号</span>
+                <input id="account-input" name="account" required inputmode="numeric" maxlength="11" autocomplete="tel" placeholder="请输入11位手机号">
+            </label>
+
+            <label>
+                <span>密码</span>
+                <input type="password" name="password" required minlength="6" autocomplete="new-password" placeholder="至少6位">
+            </label>
+
+            <label>
+                <span>确认密码</span>
+                <input type="password" name="confirm_password" required minlength="6" autocomplete="new-password" placeholder="再次输入密码">
+            </label>
+
+            <button class="button primary auth-submit" type="submit">注册并进入系统</button>
+        </form>
+
+        <p class="auth-switch">已经有账号？<a href="{{ url_for('login') }}">返回登录</a></p>
+    </section>
+</main>
+
+<script>
+const typeRadios = document.querySelectorAll('input[name="register_type"]');
+const accountLabel = document.getElementById("account-label");
+const accountInput = document.getElementById("account-input");
+const tabs = document.querySelectorAll(".register-tab");
+
+function updateRegisterType() {
+    const selected = document.querySelector('input[name="register_type"]:checked').value;
+    tabs.forEach(tab => tab.classList.toggle("active", tab.querySelector("input").checked));
+
+    if (selected === "phone") {
+        accountLabel.textContent = "手机号";
+        accountInput.type = "text";
+        accountInput.inputMode = "numeric";
+        accountInput.maxLength = 11;
+        accountInput.placeholder = "请输入11位手机号";
+        accountInput.autocomplete = "tel";
+    } else {
+        accountLabel.textContent = "邮箱";
+        accountInput.type = "email";
+        accountInput.removeAttribute("maxlength");
+        accountInput.inputMode = "email";
+        accountInput.placeholder = "请输入邮箱地址";
+        accountInput.autocomplete = "email";
+    }
+    accountInput.value = "";
+}
+
+typeRadios.forEach(radio => radio.addEventListener("change", updateRegisterType));
+
+const householdType = document.getElementById("household-type");
+const childrenField = document.getElementById("children-count-field");
+const childrenInput = document.getElementById("children-count");
+
+function updateChildrenField() {
+    const hasChildren = householdType.value === "已婚有子（三人及以上）";
+    childrenField.classList.toggle("hidden-field", !hasChildren);
+    childrenInput.required = hasChildren;
+    childrenInput.disabled = !hasChildren;
+    if (!hasChildren) {
+        childrenInput.value = "0";
+    } else if (Number(childrenInput.value) < 1) {
+        childrenInput.value = "1";
+    }
+}
+
+householdType.addEventListener("change", updateChildrenField);
+updateChildrenField();
+</script>
+<script src="{{ url_for('static', filename='warm-select.js') }}"></script>
+</body>
+</html>
