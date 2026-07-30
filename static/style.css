@@ -1361,3 +1361,15 @@ select.warm-select-native {
         box-sizing: border-box;
     }
 }
+
+
+/* 登录页主标题分为两行，避免与右侧登录卡片重叠 */
+.auth-visual h1 {
+    white-space: normal;
+    line-height: 1.35;
+    max-width: 760px;
+}
+
+.auth-visual h1 br {
+    display: block;
+}
