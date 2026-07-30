@@ -522,9 +522,6 @@ label small {
     color: var(--primary-dark);
 }
 @media (max-width: 900px) {
-    .auth-visual h1 {
-        white-space: normal;
-    }
     .stats.five {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -578,11 +575,9 @@ label small {
     padding: 34px;
 }
 .auth-visual h1 {
-    margin: 0 0 28px;
-    font-size: clamp(30px, 3.6vw, 48px);
-    line-height: 1.3;
-    letter-spacing: 0.01em;
-    white-space: nowrap;
+    margin: 12px 0 18px;
+    font-size: clamp(36px, 5vw, 62px);
+    line-height: 1.12;
     color: var(--text);
 }
 .auth-visual > p:not(.eyebrow) {
@@ -1271,105 +1266,79 @@ select.warm-select-native {
 }
 
 
-/* 儿童性别与特殊备注 */
-.child-profile-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 20px;
+/* 用户性别个性化首页 */
+.personalized-home.gender-male {
+    background: linear-gradient(135deg, #fbf8f2 0%, #dfe9dc 100%);
+    border-color: #cbd9c7;
 }
 
-.child-profile-box {
-    margin: 0;
-    padding: 20px;
-    border: 1px solid #ead7c6;
-    border-radius: 18px;
-    background: #fffaf5;
+.personalized-home.gender-female {
+    background: linear-gradient(135deg, #fffaf6 0%, #f2ded5 100%);
+    border-color: #ead0c4;
 }
 
-.child-profile-box legend {
-    padding: 0 10px;
-    color: var(--primary-dark);
-    font-weight: 800;
+.personalized-home.gender-neutral {
+    background: linear-gradient(135deg, #fffaf5 0%, #eee2d6 100%);
 }
 
-.child-profile-box label {
-    display: block;
-    margin-bottom: 16px;
+.personalization-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
 }
 
-.child-profile-box label:last-child {
-    margin-bottom: 0;
-}
-
-.child-profile-box label > span {
-    display: block;
-    margin-bottom: 8px;
-    color: #8c664e;
+.gender-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 6px 11px;
+    font-size: 13px;
     font-weight: 700;
 }
 
-.child-profile-box input,
-.child-profile-box select,
-.child-profile-box textarea {
-    width: 100%;
+.gender-male .gender-badge {
+    color: #55714f;
+    background: rgba(115, 148, 105, 0.18);
 }
 
-.child-profile-box textarea {
-    min-height: 96px;
-    resize: vertical;
-    line-height: 1.6;
+.gender-female .gender-badge {
+    color: #9b6858;
+    background: rgba(202, 145, 125, 0.18);
 }
 
-.child-card-note {
-    max-width: 520px;
-    margin-top: 8px;
-    padding: 8px 12px;
-    border-radius: 10px;
-    background: #f7eadf;
-    color: #765744;
-    line-height: 1.55;
-    overflow-wrap: anywhere;
+.gender-neutral .gender-badge {
+    color: var(--primary-dark);
+    background: rgba(184, 137, 103, 0.14);
 }
 
-@media (max-width: 720px) {
-    .child-profile-grid {
-        grid-template-columns: 1fr;
-    }
+.gender-male .personalized-tips,
+.gender-male .children-summary {
+    background: rgba(249, 252, 247, 0.78);
+    border-color: rgba(191, 208, 185, 0.9);
 }
 
-
-/* 登录页：恢复右侧信息输入框的正常宽度 */
-@media (min-width: 821px) {
-    .auth-shell {
-        width: min(1480px, calc(100% - 48px));
-        grid-template-columns: minmax(0, 1fr) minmax(440px, 520px);
-        gap: 64px;
-    }
-
-    .auth-card {
-        width: 100%;
-        max-width: 520px;
-        justify-self: end;
-        box-sizing: border-box;
-    }
-
-    .auth-form input,
-    .auth-form select,
-    .auth-form textarea,
-    .auth-submit {
-        width: 100%;
-        box-sizing: border-box;
-    }
+.gender-female .personalized-tips,
+.gender-female .children-summary {
+    background: rgba(255, 250, 247, 0.82);
+    border-color: rgba(232, 207, 196, 0.95);
 }
 
-
-/* 登录页主标题分为两行，避免与右侧登录卡片重叠 */
-.auth-visual h1 {
-    white-space: normal;
-    line-height: 1.35;
-    max-width: 760px;
+.household-personalization-note {
+    margin-top: 10px !important;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(128, 99, 80, 0.24);
+    font-size: 14px;
 }
 
-.auth-visual h1 br {
-    display: block;
+.gender-male .recommended-categories a {
+    background: #f7fbf5;
+    border-color: #c9d8c4;
+    color: #55714f;
+}
+
+.gender-female .recommended-categories a {
+    background: #fff9f6;
+    border-color: #e9d0c5;
+    color: #986757;
 }
