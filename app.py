@@ -218,10 +218,6 @@ def init_database() -> None:
             conn.execute(
                 "ALTER TABLE users ADD COLUMN child_profiles TEXT NOT NULL DEFAULT '[]'"
             )
-        if "child_profiles" not in user_columns:
-            conn.execute(
-                "ALTER TABLE users ADD COLUMN child_profiles TEXT NOT NULL DEFAULT '[]'"
-            )
 
 
 
@@ -254,6 +250,18 @@ def ensure_latest_schema() -> None:
         if "child_names" not in user_columns:
             conn.execute(
                 "ALTER TABLE users ADD COLUMN child_names TEXT NOT NULL DEFAULT '[]'"
+            )
+        if "child_profiles" not in user_columns:
+            conn.execute(
+                "ALTER TABLE users ADD COLUMN child_profiles TEXT NOT NULL DEFAULT '[]'"
+            )
+        if "gender" not in user_columns:
+            conn.execute(
+                "ALTER TABLE users ADD COLUMN gender TEXT NOT NULL DEFAULT '未设置'"
+            )
+        if "partner_gender" not in user_columns:
+            conn.execute(
+                "ALTER TABLE users ADD COLUMN partner_gender TEXT NOT NULL DEFAULT '未设置'"
             )
 
         shopping_columns = {
