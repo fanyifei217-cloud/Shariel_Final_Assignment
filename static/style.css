@@ -1342,3 +1342,139 @@ select.warm-select-native {
     border-color: #e9d0c5;
     color: #986757;
 }
+
+
+/* 男性个性化首页：全绿色主题 */
+body.gender-page-male {
+    --primary: #6f9366;
+    --primary-dark: #4f7048;
+    --primary-light: #dcebd7;
+    --background: #edf5ea;
+    --surface: #f7fbf5;
+    --border: #c7d9c1;
+    --text: #31452e;
+    --muted: #71806d;
+    background: linear-gradient(135deg, #eff7ec 0%, #dcead7 100%);
+}
+
+body.gender-page-male .topbar {
+    background: linear-gradient(135deg, #d8e8d3 0%, #bcd3b5 100%);
+    border-bottom-color: #aec7a6;
+}
+
+body.gender-page-male .eyebrow,
+body.gender-page-male .subtitle,
+body.gender-page-male .welcome-user {
+    color: #587251;
+}
+
+body.gender-page-male .nav-bar {
+    background: #f1f7ef;
+    border-bottom-color: #c4d6be;
+}
+
+body.gender-page-male .nav-inner a {
+    color: #587251;
+}
+
+body.gender-page-male .nav-inner a:hover,
+body.gender-page-male .nav-inner a.active {
+    background: #d7e7d2;
+    color: #3f6139;
+}
+
+body.gender-page-male .personalized-home.gender-male {
+    background: linear-gradient(135deg, #dbead6 0%, #b9d2b1 100%);
+    border-color: #a9c5a1;
+}
+
+body.gender-page-male .panel,
+body.gender-page-male .stat-card,
+body.gender-page-male .personalized-tips,
+body.gender-page-male .children-summary {
+    background: #f4faf2;
+    border-color: #c2d6bc;
+}
+
+body.gender-page-male .stat-card strong,
+body.gender-page-male h1,
+body.gender-page-male h2,
+body.gender-page-male h3,
+body.gender-page-male th,
+body.gender-page-male label span {
+    color: #395534;
+}
+
+body.gender-page-male .button.primary,
+body.gender-page-male button.primary {
+    background: #6f9366;
+    border-color: #6f9366;
+    color: #fff;
+}
+
+body.gender-page-male .button.primary:hover,
+body.gender-page-male button.primary:hover {
+    background: #587d50;
+    border-color: #587d50;
+}
+
+body.gender-page-male .button.secondary {
+    background: #e8f2e5;
+    border-color: #bfd2b9;
+    color: #4d6e47;
+}
+
+body.gender-page-male input,
+body.gender-page-male select,
+body.gender-page-male textarea,
+body.gender-page-male .warm-select-trigger {
+    background: #fbfef9;
+    border-color: #bdd0b7;
+    color: #344b30;
+}
+
+body.gender-page-male input:focus,
+body.gender-page-male select:focus,
+body.gender-page-male textarea:focus,
+body.gender-page-male .warm-select-trigger:focus {
+    border-color: #719568;
+    box-shadow: 0 0 0 3px rgba(111, 147, 102, 0.16);
+}
+
+body.gender-page-male .warm-select-menu {
+    background: #f5faf3;
+    border-color: #b9ceb3;
+}
+
+body.gender-page-male .warm-select-option:hover,
+body.gender-page-male .warm-select-option.focused {
+    background: #dcebd7;
+}
+
+body.gender-page-male .warm-select-option.selected {
+    background: #6f9366;
+    color: #fff;
+}
+
+body.gender-page-male table thead,
+body.gender-page-male tr:hover {
+    background: #edf6ea;
+}
+
+body.gender-page-male th,
+body.gender-page-male td {
+    border-color: #cfdfca;
+}
+
+body.gender-page-male .status-badge,
+body.gender-page-male .gender-badge,
+body.gender-page-male .household-badge {
+    background: #d7e8d2;
+    color: #486941;
+}
+
+body.gender-page-male .recommended-categories a {
+    background: #e7f2e3;
+    border-color: #b9cfb3;
+    color: #46663f;
+}
