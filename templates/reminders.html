@@ -15,5 +15,6 @@
         {% for item in expired %}<div class="reminder-row danger-row"><div><strong>{{ item.name }}</strong><small>{{ item.item_code }}</small></div><span>{{ item.expiry_date }}</span></div>{% else %}<p class="muted">暂无过期物品。</p>{% endfor %}
     </section>
 </main>
+<script src="{{ url_for('static', filename='warm-select.js') }}"></script>
 </body>
 </html>
