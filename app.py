@@ -105,6 +105,7 @@ def init_database() -> None:
                 phone TEXT UNIQUE,
                 email TEXT UNIQUE,
                 household_type TEXT NOT NULL DEFAULT '独居',
+                gender TEXT NOT NULL DEFAULT '未设置',
                 children_count INTEGER NOT NULL DEFAULT 0,
                 child_names TEXT NOT NULL DEFAULT '[]',
                 child_profiles TEXT NOT NULL DEFAULT '[]',
@@ -138,6 +139,10 @@ def init_database() -> None:
             )
             """
         )
+
+        user_columns = {row["name"] for row in conn.execute("PRAGMA table_info(users)")}
+        if "gender" not in user_columns:
+            conn.execute("ALTER TABLE users ADD COLUMN gender TEXT NOT NULL DEFAULT '未设置'")
 
         columns = {row["name"] for row in conn.execute("PRAGMA table_info(items)")}
         if "user_id" not in columns:
@@ -427,6 +432,7 @@ def register():
         register_type = request.form.get("register_type", "phone")
         account = request.form.get("account", "").strip().lower()
         household_type = request.form.get("household_type", "独居").strip()
+        gender = request.form.get("gender", "未设置").strip()
         children_count_raw = request.form.get("children_count", "0").strip()
         password = request.form.get("password", "")
         confirm_password = request.form.get("confirm_password", "")
@@ -439,6 +445,7 @@ def register():
             "情侣或已婚无子（两人）",
             "已婚有子（三人及以上）",
         }
+        allowed_genders = {"未设置", "男", "女"}
 
         try:
             children_count = int(children_count_raw or 0)
@@ -449,6 +456,8 @@ def register():
 
         if not all([display_name, account, household_type, password, confirm_password]):
             flash("请完整填写注册信息。", "error")
+        elif gender not in allowed_genders:
+            flash("请选择正确的性别。", "error")
         elif household_type not in allowed_household_types:
             flash("请选择正确的居住成员情况。", "error")
         elif children_count < 0:
@@ -476,14 +485,15 @@ def register():
                     cursor = conn.execute(
                         """
                         INSERT INTO users
-                        (display_name, phone, email, household_type, children_count, child_names, password_hash, created_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        (display_name, phone, email, household_type, gender, children_count, child_names, password_hash, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                         (
                             display_name,
                             phone,
                             email,
                             household_type,
+                            gender,
                             children_count,
                             json.dumps([f"儿童{i}" for i in range(1, children_count + 1)], ensure_ascii=False),
                             generate_password_hash(password),
@@ -856,7 +866,7 @@ def children_storage():
         for index in range(count):
             raw = saved_profiles[index] if index < len(saved_profiles) and isinstance(saved_profiles[index], dict) else {}
             gender = str(raw.get("gender", "未设置")).strip()
-            if gender not in {"男孩", "女孩", "其他", "未设置"}:
+            if gender not in {"男孩", "女孩", "未设置"}:
                 gender = "未设置"
             profiles.append({
                 "gender": gender,
@@ -891,7 +901,7 @@ def children_storage():
                     value = submitted_names[index].strip() if index < len(submitted_names) else ""
                     cleaned_names.append(value or f"儿童{index + 1}")
                     gender = submitted_genders[index].strip() if index < len(submitted_genders) else "未设置"
-                    if gender not in {"男孩", "女孩", "其他", "未设置"}:
+                    if gender not in {"男孩", "女孩", "未设置"}:
                         gender = "未设置"
                     notes = submitted_notes[index].strip() if index < len(submitted_notes) else ""
                     cleaned_profiles.append({"gender": gender, "notes": notes[:300]})
