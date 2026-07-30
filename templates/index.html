@@ -6,7 +6,7 @@
     <title>家庭物品收纳管理系统</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
+<body class="{% if gender_personalization.accent_class == 'gender-male' %}gender-page-male{% elif gender_personalization.accent_class == 'gender-female' %}gender-page-female{% else %}gender-page-neutral{% endif %}">
 <header class="topbar">
     <div class="container topbar-inner">
         <div>
