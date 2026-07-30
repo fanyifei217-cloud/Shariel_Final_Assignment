@@ -107,6 +107,7 @@ def init_database() -> None:
                 household_type TEXT NOT NULL DEFAULT '独居',
                 children_count INTEGER NOT NULL DEFAULT 0,
                 child_names TEXT NOT NULL DEFAULT '[]',
+                child_profiles TEXT NOT NULL DEFAULT '[]',
                 password_hash TEXT NOT NULL,
                 created_at TEXT NOT NULL,
                 CHECK (phone IS NOT NULL OR email IS NOT NULL)
@@ -178,6 +179,14 @@ def init_database() -> None:
         if "child_names" not in user_columns:
             conn.execute(
                 "ALTER TABLE users ADD COLUMN child_names TEXT NOT NULL DEFAULT '[]'"
+            )
+        if "child_profiles" not in user_columns:
+            conn.execute(
+                "ALTER TABLE users ADD COLUMN child_profiles TEXT NOT NULL DEFAULT '[]'"
+            )
+        if "child_profiles" not in user_columns:
+            conn.execute(
+                "ALTER TABLE users ADD COLUMN child_profiles TEXT NOT NULL DEFAULT '[]'"
             )
 
 
@@ -826,7 +835,7 @@ def children_storage():
     uid = current_user_id()
     with get_connection() as conn:
         user = conn.execute(
-            "SELECT children_count, child_names FROM users WHERE id = ?", (uid,)
+            "SELECT children_count, child_names, child_profiles FROM users WHERE id = ?", (uid,)
         ).fetchone()
 
         count = max(int((user["children_count"] if user else 0) or 0), 1)
@@ -834,16 +843,32 @@ def children_storage():
             saved_names = json.loads((user["child_names"] if user else "[]") or "[]")
         except (TypeError, ValueError, json.JSONDecodeError):
             saved_names = []
+        try:
+            saved_profiles = json.loads((user["child_profiles"] if user else "[]") or "[]")
+        except (TypeError, ValueError, json.JSONDecodeError):
+            saved_profiles = []
 
         names = [str(name).strip() for name in saved_names if str(name).strip()][:count]
         while len(names) < count:
             names.append(f"儿童{len(names) + 1}")
 
+        profiles = []
+        for index in range(count):
+            raw = saved_profiles[index] if index < len(saved_profiles) and isinstance(saved_profiles[index], dict) else {}
+            gender = str(raw.get("gender", "未设置")).strip()
+            if gender not in {"男孩", "女孩", "其他", "未设置"}:
+                gender = "未设置"
+            profiles.append({
+                "gender": gender,
+                "notes": str(raw.get("notes", "")).strip()[:300],
+            })
+
         if request.method == "POST":
-            action = request.form.get("action", "save_names")
+            action = request.form.get("action", "save_profiles")
             if action == "add_child":
                 count += 1
                 names.append(f"儿童{count}")
+                profiles.append({"gender": "未设置", "notes": ""})
             elif action == "remove_child" and count > 1:
                 removed_name = names[-1]
                 assigned = conn.execute(
@@ -855,35 +880,44 @@ def children_storage():
                     return redirect(url_for("children_storage"))
                 count -= 1
                 names = names[:count]
+                profiles = profiles[:count]
             else:
-                submitted = request.form.getlist("child_name")
-                cleaned = []
+                submitted_names = request.form.getlist("child_name")
+                submitted_genders = request.form.getlist("child_gender")
+                submitted_notes = request.form.getlist("child_notes")
+                cleaned_names = []
+                cleaned_profiles = []
                 for index in range(count):
-                    value = submitted[index].strip() if index < len(submitted) else ""
-                    cleaned.append(value or f"儿童{index + 1}")
-                if len(set(cleaned)) != len(cleaned):
+                    value = submitted_names[index].strip() if index < len(submitted_names) else ""
+                    cleaned_names.append(value or f"儿童{index + 1}")
+                    gender = submitted_genders[index].strip() if index < len(submitted_genders) else "未设置"
+                    if gender not in {"男孩", "女孩", "其他", "未设置"}:
+                        gender = "未设置"
+                    notes = submitted_notes[index].strip() if index < len(submitted_notes) else ""
+                    cleaned_profiles.append({"gender": gender, "notes": notes[:300]})
+                if len(set(cleaned_names)) != len(cleaned_names):
                     flash("儿童昵称不能重复。", "error")
                     return redirect(url_for("children_storage"))
-                # Update item assignments when a child is renamed.
-                for old_name, new_name in zip(names, cleaned):
+                for old_name, new_name in zip(names, cleaned_names):
                     if old_name != new_name:
                         conn.execute(
                             "UPDATE items SET child_name = ? WHERE user_id = ? AND child_name = ?",
                             (new_name, uid, old_name),
                         )
-                names = cleaned
+                names = cleaned_names
+                profiles = cleaned_profiles
 
             conn.execute(
-                "UPDATE users SET children_count = ?, child_names = ? WHERE id = ?",
-                (count, json.dumps(names, ensure_ascii=False), uid),
+                "UPDATE users SET children_count = ?, child_names = ?, child_profiles = ? WHERE id = ?",
+                (count, json.dumps(names, ensure_ascii=False), json.dumps(profiles, ensure_ascii=False), uid),
             )
             session["children_count"] = count
             session["child_names"] = names
-            flash("儿童收纳设置已保存。", "success")
+            flash("儿童成员资料已保存。", "success")
             return redirect(url_for("children_storage"))
 
         child_groups = []
-        for label in names:
+        for index, label in enumerate(names):
             rows = conn.execute(
                 """
                 SELECT * FROM items
@@ -894,6 +928,8 @@ def children_storage():
             ).fetchall()
             child_groups.append({
                 "name": label,
+                "gender": profiles[index]["gender"],
+                "notes": profiles[index]["notes"],
                 "items": rows,
                 "count": len(rows),
                 "quantity": sum(int(row["quantity"] or 0) for row in rows),
