@@ -273,13 +273,17 @@ code {
 }
 
 .actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    white-space: nowrap;
 }
 
 .actions form {
-    margin: 0;
+    display: inline-block;
+    margin: 0 0 0 12px;
+    vertical-align: middle;
+}
+
+.actions .text-link {
+    vertical-align: middle;
 }
 
 .text-link,
@@ -1118,4 +1122,145 @@ body:not(.auth-body) .topbar + .nav-bar + main.container {
     .child-name-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* 登录页大型绿色植物插画 */
+.home-scene.plant-scene {
+    margin-top: 26px;
+    min-height: 310px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.large-plant-illustration {
+    width: min(520px, 100%);
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 18px 18px rgba(91, 112, 70, 0.12));
+}
+
+
+/* 注册页大型房子插画 */
+.home-scene.house-scene {
+    margin-top: 26px;
+    min-height: 310px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.large-house-illustration {
+    width: min(560px, 100%);
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 18px 18px rgba(113, 78, 55, 0.12));
+}
+
+/* 温馨色调自定义选择框 */
+select.warm-select-native {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+.warm-select {
+    position: relative;
+    width: 100%;
+    font: inherit;
+}
+
+.warm-select-button {
+    width: 100%;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid #dfc8b5;
+    border-radius: 11px;
+    background: #fff8f1;
+    color: var(--text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.warm-select-button::after {
+    content: "";
+    width: 8px;
+    height: 8px;
+    flex: 0 0 auto;
+    border-right: 2px solid #8f684f;
+    border-bottom: 2px solid #8f684f;
+    transform: rotate(45deg) translateY(-2px);
+    transition: transform 0.18s ease;
+}
+
+.warm-select.open .warm-select-button,
+.warm-select-button:focus-visible {
+    outline: none;
+    border-color: #bd8f6f;
+    box-shadow: 0 0 0 3px rgba(184, 137, 103, 0.16);
+}
+
+.warm-select.open .warm-select-button::after {
+    transform: rotate(225deg) translate(-2px, -2px);
+}
+
+.warm-select-menu {
+    position: absolute;
+    z-index: 1000;
+    top: calc(100% + 7px);
+    left: 0;
+    right: 0;
+    max-height: 320px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 7px;
+    list-style: none;
+    border: 1px solid #dfc8b5;
+    border-radius: 13px;
+    background: #fff8f1;
+    box-shadow: 0 14px 30px rgba(91, 61, 43, 0.18);
+}
+
+.warm-select-menu[hidden] {
+    display: none;
+}
+
+.warm-select-option {
+    position: relative;
+    padding: 10px 13px 10px 38px;
+    border-radius: 9px;
+    color: #4a382f;
+    cursor: pointer;
+    line-height: 1.35;
+}
+
+.warm-select-option:hover,
+.warm-select-option.focused {
+    background: #f3e2d4;
+}
+
+.warm-select-option.selected {
+    background: #c79673;
+    color: #fffaf5;
+    font-weight: 700;
+}
+
+.warm-select-option.selected::before {
+    content: "✓";
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 17px;
+    font-weight: 800;
 }
