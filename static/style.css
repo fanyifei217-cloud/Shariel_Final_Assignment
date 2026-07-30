@@ -1761,3 +1761,253 @@ body.gender-page-male input[type="radio"],
 body.gender-page-male input[type="range"] {
     accent-color: #6f9366 !important;
 }
+
+/* ===== 男性提醒中心：修复色块和层级，统一柔和绿色 ===== */
+body.gender-page-male .topbar .topbar-inner,
+body.gender-page-male main.container.narrow {
+    background: transparent !important;
+}
+
+body.gender-page-male .topbar.compact {
+    background: linear-gradient(135deg, #d9ead4 0%, #c3dcbf 100%) !important;
+    border-bottom: 1px solid #abc6a5 !important;
+}
+
+body.gender-page-male main.container.narrow {
+    padding-top: 32px;
+    padding-bottom: 48px;
+}
+
+body.gender-page-male main.container.narrow > .panel {
+    background: #f8fcf6 !important;
+    border: 1px solid #bfd3ba !important;
+    border-radius: 22px !important;
+    box-shadow: 0 12px 28px rgba(58, 89, 53, 0.10) !important;
+    padding: 26px !important;
+}
+
+body.gender-page-male main.container.narrow > .panel .panel-heading {
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 1px solid #d4e4d0 !important;
+    box-shadow: none !important;
+    padding: 0 0 18px !important;
+    margin: 0 0 20px !important;
+}
+
+body.gender-page-male main.container.narrow > .panel .panel-heading h2 {
+    color: #355a31 !important;
+    margin: 0 0 5px !important;
+}
+
+body.gender-page-male main.container.narrow > .panel .panel-heading p {
+    color: #789073 !important;
+    margin: 0 !important;
+}
+
+body.gender-page-male main.container.narrow > .panel > .muted {
+    color: #71816d !important;
+    margin: 0 !important;
+}
+
+body.gender-page-male .reminder-row {
+    background: #eef7eb !important;
+    border: 1px solid #cee0ca !important;
+    box-shadow: none !important;
+}
+
+/* ===== 男性账号：全站绿色融合优化（统一层次，避免大色块） ===== */
+body.gender-page-male {
+    --male-bg: #eef5eb;
+    --male-surface: #f8fbf6;
+    --male-surface-soft: #f1f7ee;
+    --male-header: #dbe9d6;
+    --male-header-2: #c9ddc3;
+    --male-border: #c8d9c3;
+    --male-line: #d7e4d3;
+    --male-primary: #6f9168;
+    --male-primary-dark: #55764f;
+    --male-text: #344a31;
+    --male-muted: #71806d;
+    background: linear-gradient(180deg, #e8f2e5 0%, #f2f7ef 44%, #edf5ea 100%) !important;
+    color: var(--male-text) !important;
+}
+
+body.gender-page-male .topbar,
+body.gender-page-male .topbar.compact,
+body.gender-page-male .page-header,
+body.gender-page-male .hero,
+body.gender-page-male .section-header,
+body.gender-page-male .children-hero,
+body.gender-page-male .children-overview,
+body.gender-page-male .personalized-home {
+    background: linear-gradient(135deg, rgba(219, 233, 214, .96) 0%, rgba(201, 221, 195, .92) 100%) !important;
+    border-color: #b9cfb3 !important;
+    box-shadow: none !important;
+}
+
+body.gender-page-male main,
+body.gender-page-male .container,
+body.gender-page-male .page-shell,
+body.gender-page-male .content-area,
+body.gender-page-male .main-content {
+    background: transparent !important;
+}
+
+body.gender-page-male .panel,
+body.gender-page-male .card,
+body.gender-page-male .form-card,
+body.gender-page-male .content-card,
+body.gender-page-male .settings-card,
+body.gender-page-male .child-card,
+body.gender-page-male .location-card,
+body.gender-page-male .reminder-card,
+body.gender-page-male .shopping-card,
+body.gender-page-male .table-panel,
+body.gender-page-male .form-panel,
+body.gender-page-male .filters,
+body.gender-page-male .nav-bar,
+body.gender-page-male .quick-form,
+body.gender-page-male .box,
+body.gender-page-male .empty,
+body.gender-page-male .modal-content,
+body.gender-page-male .stat-card,
+body.gender-page-male .children-settings,
+body.gender-page-male .children-summary,
+body.gender-page-male .unassigned-panel {
+    background: rgba(248, 251, 246, .96) !important;
+    border: 1px solid var(--male-border) !important;
+    color: var(--male-text) !important;
+    box-shadow: 0 12px 28px rgba(62, 88, 57, .08) !important;
+}
+
+body.gender-page-male .panel-heading,
+body.gender-page-male .card-header,
+body.gender-page-male .table-panel thead,
+body.gender-page-male thead,
+body.gender-page-male th {
+    background: #e7f0e3 !important;
+    border-color: var(--male-line) !important;
+    color: #3c5937 !important;
+    box-shadow: none !important;
+}
+
+body.gender-page-male .panel-heading {
+    background: transparent !important;
+    border-bottom: 1px solid var(--male-line) !important;
+}
+
+body.gender-page-male h1,
+body.gender-page-male h2,
+body.gender-page-male h3,
+body.gender-page-male h4,
+body.gender-page-male label,
+body.gender-page-male strong {
+    color: #385234 !important;
+}
+
+body.gender-page-male p,
+body.gender-page-male .muted,
+body.gender-page-male .subtitle,
+body.gender-page-male small,
+body.gender-page-male .child-item-meta {
+    color: var(--male-muted) !important;
+}
+
+body.gender-page-male input,
+body.gender-page-male textarea,
+body.gender-page-male select,
+body.gender-page-male .warm-select-button,
+body.gender-page-male .warm-select-trigger {
+    background: #fbfdf9 !important;
+    border-color: #bfd1ba !important;
+    color: var(--male-text) !important;
+}
+
+body.gender-page-male input:focus,
+body.gender-page-male textarea:focus,
+body.gender-page-male select:focus,
+body.gender-page-male .warm-select-button:focus,
+body.gender-page-male .warm-select-trigger:focus {
+    border-color: var(--male-primary) !important;
+    box-shadow: 0 0 0 4px rgba(111, 145, 104, .13) !important;
+}
+
+body.gender-page-male .button.primary,
+body.gender-page-male button.primary,
+body.gender-page-male .check-button,
+body.gender-page-male .auth-submit {
+    background: var(--male-primary) !important;
+    border-color: var(--male-primary) !important;
+    color: #fff !important;
+}
+
+body.gender-page-male .button.primary:hover,
+body.gender-page-male button.primary:hover,
+body.gender-page-male .check-button:hover,
+body.gender-page-male .auth-submit:hover {
+    background: var(--male-primary-dark) !important;
+}
+
+body.gender-page-male .button.secondary,
+body.gender-page-male button.secondary,
+body.gender-page-male .mini-button,
+body.gender-page-male .register-tab,
+body.gender-page-male .topbar .button {
+    background: #edf5ea !important;
+    border-color: #c3d5be !important;
+    color: #4f6f49 !important;
+}
+
+body.gender-page-male .status,
+body.gender-page-male .status-badge,
+body.gender-page-male .household-badge,
+body.gender-page-male .category,
+body.gender-page-male .badge,
+body.gender-page-male .pill,
+body.gender-page-male .eyebrow,
+body.gender-page-male .tag {
+    background: #e4efe0 !important;
+    border-color: #c5d7c0 !important;
+    color: #4b6b45 !important;
+}
+
+body.gender-page-male tbody tr:nth-child(even) {
+    background: #f4f8f2 !important;
+}
+
+body.gender-page-male tbody tr:hover {
+    background: #eaf3e7 !important;
+}
+
+body.gender-page-male .reminder-row,
+body.gender-page-male .shopping-row {
+    background: transparent !important;
+    border-color: var(--male-line) !important;
+    box-shadow: none !important;
+}
+
+body.gender-page-male .privacy-note,
+body.gender-page-male .login-note,
+body.gender-page-male .personalized-tips,
+body.gender-page-male .flash {
+    background: #edf5ea !important;
+    border-color: #cbdcc7 !important;
+    color: #557250 !important;
+}
+
+body.gender-page-male .warm-select-menu {
+    background: #f8fbf6 !important;
+    border-color: #bfd1ba !important;
+    box-shadow: 0 14px 30px rgba(62, 88, 57, .14) !important;
+}
+
+body.gender-page-male .warm-select-option:hover,
+body.gender-page-male .warm-select-option.focused {
+    background: #e7f1e3 !important;
+}
+
+body.gender-page-male .warm-select-option.selected {
+    background: var(--male-primary) !important;
+    color: #fff !important;
+}
